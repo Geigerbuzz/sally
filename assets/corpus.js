@@ -140,8 +140,20 @@ Sally.overallScore = () => {
   return { pct:Math.round(avg), covered:covered.length, total:17, gaps:17-covered.length };
 };
 
-/* shared top nav */
+/* living-glass backdrop: base → aurora → frost (mutes it) → grain */
+Sally.mountFX = function(){
+  const bd = document.querySelector(".backdrop");
+  if(!bd || bd.dataset.fx) return; bd.dataset.fx="1";
+  bd.innerHTML =
+    `<div class="fx-base"></div>`+
+    `<div class="fx-aurora"><i></i><i></i><i></i><i></i></div>`+
+    `<div class="fx-frost"></div>`+
+    `<div class="fx-grain"></div>`;
+};
+
+/* shared top nav with a sliding glass indicator */
 Sally.mountNav = function(active){
+  Sally.mountFX();
   const links = [
     {id:"documents", href:"sally-documents.html",      label:"Documents"},
     {id:"ask",       href:"sally-ask.html",            label:"Ask Sally"},
@@ -157,10 +169,32 @@ Sally.mountNav = function(active){
       <span class="logo">Sal<b>ly</b></span>
       <span class="sub">${Sally.company.name}</span>
     </a>
-    <nav class="nav">
+    <nav class="nav" id="snav">
+      <span class="nav-pill" id="snavpill"></span>
       ${links.map(l=>`<a href="${l.href}" class="${l.id===active?'active':''}">${l.label}</a>`).join("")}
     </nav>
     <span class="spacer"></span>
     ${host.dataset.actions||""}
   `;
+  Sally._wireNavPill(active);
+};
+
+Sally._wireNavPill = function(active){
+  const nav = document.getElementById("snav"); if(!nav) return;
+  const pill = document.getElementById("snavpill");
+  const items = [...nav.querySelectorAll("a")];
+  const move = el => {
+    if(!el){ pill.style.opacity=0; return; }
+    pill.style.opacity=1;
+    pill.style.width = el.offsetWidth+"px";
+    pill.style.transform = `translateX(${el.offsetLeft - 4}px)`;
+  };
+  const home = items.find(a=>a.classList.contains("active")) || null;
+  items.forEach(a=> a.addEventListener("mouseenter", ()=>move(a)));
+  nav.addEventListener("mouseleave", ()=>move(home));
+  const settle = ()=>move(home);
+  settle();
+  if(document.fonts && document.fonts.ready) document.fonts.ready.then(settle);
+  window.addEventListener("resize", settle);
+  setTimeout(settle, 60); setTimeout(settle, 300);
 };
