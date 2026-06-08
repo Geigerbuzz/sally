@@ -294,6 +294,8 @@ body.dock-right .dock-item:hover::before{ transform:translateY(-50%) translateX(
 .widget:hover{ transform:translateY(-4px); box-shadow:var(--shadow-2); z-index:2; border-color:var(--border-2) }
 .widget:active{ cursor:grabbing }
 .widget.dragging{ opacity:.45; transform:scale(.96) }
+@keyframes widgetIn{ from{ opacity:0; transform:translateY(14px) scale(.97) } to{ opacity:1; transform:none } }
+.widget.enter{ animation:widgetIn .5s cubic-bezier(.2,.8,.2,1) backwards }   /* backwards fill so hover lift still works after */
 .widget.clickable{ cursor:pointer }
 .widget .w-head{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:12px }
 .widget .w-title{ font-size:13px; font-weight:500; color:var(--text-secondary);

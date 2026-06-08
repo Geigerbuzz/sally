@@ -20,6 +20,8 @@ document.addEventListener("DOMContentLoaded", ()=>{
     Chart.defaults.plugins.tooltip.cornerRadius = 8;
     Chart.defaults.plugins.legend.display = false;
     Chart.defaults.maintainAspectRatio = false;
+    Chart.defaults.animation.duration = 850;
+    Chart.defaults.animation.easing = "easeInOutQuart";
   }
 
   /* ---- default widget set (the demo's hero content) ---- */
@@ -65,8 +67,10 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   function renderAll(){
     grid.innerHTML = "";
-    DEFAULT.forEach(p => grid.appendChild(WidgetRenderer.render(p)));
-    custom().forEach(p => grid.appendChild(WidgetRenderer.render(p)));   // AI-added widgets persist across sessions
+    let i = 0;
+    const add = p => { const el = WidgetRenderer.render(p); el.classList.add("enter"); el.style.animationDelay = (i++ * 0.03) + "s"; grid.appendChild(el); };
+    DEFAULT.forEach(add);
+    custom().forEach(add);                              // AI-added widgets persist across sessions
     WidgetRenderer.flush();
   }
   renderAll();
