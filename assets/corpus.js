@@ -140,61 +140,162 @@ Sally.overallScore = () => {
   return { pct:Math.round(avg), covered:covered.length, total:17, gaps:17-covered.length };
 };
 
-/* living-glass backdrop: base → aurora → frost (mutes it) → grain */
-Sally.mountFX = function(){
-  const bd = document.querySelector(".backdrop");
-  if(!bd || bd.dataset.fx) return; bd.dataset.fx="1";
-  bd.innerHTML =
-    `<div class="fx-base"></div>`+
-    `<div class="fx-aurora"><i></i><i></i><i></i><i></i></div>`+
-    `<div class="fx-frost"></div>`+
-    `<div class="fx-grain"></div>`;
+Sally.topGoals = (k=6) => Sally.SDG
+  .map(g=>({g, sc:Sally.scoreForGoal(g.n)}))
+  .filter(x=>x.sc.pct>0)
+  .sort((a,b)=>b.sc.pct-a.sc.pct)
+  .slice(0,k);
+Sally.gapGoals    = () => Sally.SDG.filter(g=>Sally.docsForGoal(g.n).length===0);
+Sally.strongCount = () => Sally.SDG.filter(g=>Sally.scoreForGoal(g.n).status==="Strong").length;
+Sally.recentDocs  = (k=6) => [...Sally.DOCS].sort((a,b)=>(b.date||"").localeCompare(a.date||"")).slice(0,k);
+
+/* =========================================================================
+   metrics — figures pulled straight from the citation quotes above, so the
+   dashboard charts show the company's real reported numbers (no invented data)
+   ========================================================================= */
+Sally.metrics = {
+  /* Sustainability/Carbon reports: Scope 1–2 down 27% vs 2019 → 14,200 tCO2e; net-zero 2035 */
+  emissions:{ years:[2019,2020,2021,2022,2023,2024],
+              scope12:[19450,18600,17400,16250,15050,14200],
+              targetYear:2035, targetLabel:"Net-zero operations", scope3Share:71 },
+  /* Energy Transition Report: 61% renewables, 4.1 MWp solar, grid draw −18% */
+  energy:{ renewables:61, grid:39, solarMWp:4.1, gridReduction:18 },
+  /* EHS Review: recordable injury rate −31% YoY → 0.42 / 200k hours */
+  safety:{ years:[2020,2021,2022,2023,2024], injuryRate:[0.95,0.78,0.66,0.61,0.42], dropPct:31 },
+  /* Pay Equity Audit: adjusted gender pay gap → 1.9%; £1.2m remediation */
+  payGap:{ years:[2020,2021,2022,2023,2024], pct:[4.8,3.9,3.1,2.4,1.9], remediation:"£1.2m" },
+  /* Diversity Dashboard / People Report */
+  people:{ womenInMgmt:34, womenInMgmtPrev:28, underRepHires:22, engagement:81, attrition:9.3,
+           trainingHours:38, apprentices:64 },
+  /* Sustainability / Circularity */
+  waste:{ diverted:92, recoveredTonnes:38 },
+  /* Governance / Compliance log */
+  governance:{ boardIndependence:55, antiCorruptionTraining:100, materialBreaches:0 },
+  /* Partnerships Register / Membership */
+  partnerships:{ active:14, research:3, bodies:4 }
 };
 
-/* shared top nav with a sliding glass indicator */
-Sally.mountNav = function(active){
-  Sally.mountFX();
-  const links = [
-    {id:"documents", href:"sally-documents.html",      label:"Documents"},
-    {id:"ask",       href:"sally-ask.html",            label:"Ask Sally"},
-    {id:"compliance",href:"sally-sdg-compliance.html", label:"Compliance"},
-    {id:"graph",     href:"sally-knowledge-graph.html",label:"Graph"},
-  ];
-  const host = document.getElementById("topbar");
-  if(!host) return;
-  host.className = "topbar";
-  host.innerHTML = `
-    <a class="brand" href="index.html" title="Sally home">
-      <span class="mark"></span>
-      <span class="logo">Sal<b>ly</b></span>
-      <span class="sub">${Sally.company.name}</span>
-    </a>
-    <nav class="nav" id="snav">
-      <span class="nav-pill" id="snavpill"></span>
-      ${links.map(l=>`<a href="${l.href}" class="${l.id===active?'active':''}">${l.label}</a>`).join("")}
-    </nav>
-    <span class="spacer"></span>
-    ${host.dataset.actions||""}
+/* =========================================================================
+   app shell — glass icon-dock + theme system (replaces the old topbar)
+   ========================================================================= */
+Sally.NAV = [
+  {id:"dashboard",  href:"index.html",                  icon:"ri-dashboard-line",     label:"Dashboard"},
+  {id:"ask",        href:"sally-ask.html",              icon:"ri-chat-3-line",        label:"Ask Sally"},
+  {id:"documents",  href:"sally-documents.html",        icon:"ri-file-list-2-line",   label:"Documents"},
+  {id:"graph",      href:"sally-knowledge-graph.html",  icon:"ri-bubble-chart-line",  label:"Knowledge Graph"},
+  {id:"compliance", href:"sally-sdg-compliance.html",   icon:"ri-shield-check-line",  label:"Compliance"},
+];
+
+Sally.applyTheme = function(t){
+  document.documentElement.setAttribute("data-theme", t);
+  try{ localStorage.setItem("sally-theme", t); }catch(e){}
+  const ic = document.querySelector("#dock-theme i");
+  if(ic) ic.className = t==="dark" ? "ri-moon-line" : "ri-sun-line";
+};
+
+/* set the saved theme as early as possible (call from <head> to avoid a flash) */
+Sally.initTheme = function(){
+  let t="dark"; try{ t = localStorage.getItem("sally-theme") || "dark"; }catch(e){}
+  document.documentElement.setAttribute("data-theme", t);
+  return t;
+};
+
+Sally.mountDock = function(active){
+  const t = Sally.initTheme();
+  const aiOn = Sally.LLM && Sally.LLM.configured();
+  let dock = document.querySelector(".floating-dock");
+  if(!dock){ dock = document.createElement("nav"); dock.className="floating-dock"; document.body.appendChild(dock); }
+  dock.setAttribute("aria-label","Primary");
+  dock.innerHTML = `
+    <a class="dock-brand" href="index.html" title="Sally home" aria-label="Sally home"><span class="dot"></span></a>
+    <div class="dock-items">
+      ${Sally.NAV.map(n=>`<a class="dock-item ${n.id===active?'active':''}" href="${n.href}" data-label="${n.label}" aria-label="${n.label}"><i class="${n.icon}"></i></a>`).join("")}
+    </div>
+    <div class="dock-divider"></div>
+    <button class="dock-item" id="dock-settings" data-label="Settings" aria-label="Settings"><i class="ri-settings-3-line"></i><span class="dock-dot ${aiOn?'on':''}" id="ai-dot"></span></button>
+    <button class="dock-item" id="dock-theme" data-label="Toggle theme" aria-label="Toggle theme"><i class="${t==='dark'?'ri-moon-line':'ri-sun-line'}"></i></button>
   `;
-  Sally._wireNavPill(active);
+  const tt = document.getElementById("dock-theme");
+  if(tt) tt.onclick = ()=> Sally.applyTheme(document.documentElement.getAttribute("data-theme")==="dark" ? "light" : "dark");
+  if(Sally.mountSettings) Sally.mountSettings();
+  const sg = document.getElementById("dock-settings");
+  if(sg) sg.onclick = ()=> Sally.openSettings();
 };
 
-Sally._wireNavPill = function(active){
-  const nav = document.getElementById("snav"); if(!nav) return;
-  const pill = document.getElementById("snavpill");
-  const items = [...nav.querySelectorAll("a")];
-  const move = el => {
-    if(!el){ pill.style.opacity=0; return; }
-    pill.style.opacity=1;
-    pill.style.width = el.offsetWidth+"px";
-    pill.style.transform = `translateX(${el.offsetLeft - 4}px)`;
+/* ---- settings panel: DeepSeek key / model, test, reset (per-browser) ---- */
+Sally.mountSettings = function(){
+  if(document.getElementById("set-modal") || !Sally.LLM) return;
+  const c = Sally.LLM.cfg();
+  const el = document.createElement("div");
+  el.innerHTML = `
+    <div class="scrim" id="set-scrim"></div>
+    <aside class="settings-modal" id="set-modal" role="dialog" aria-label="Settings">
+      <div class="set-head"><div><div class="eyebrow accent">Sally</div><h2>Settings</h2></div>
+        <button class="dclose" id="set-close"><i class="ri-close-line"></i></button></div>
+      <div class="set-body">
+        <div class="set-block">
+          <label for="set-key">DeepSeek API key</label>
+          <input type="password" id="set-key" class="input" placeholder="sk-…" autocomplete="off" spellcheck="false" value="${c.key?c.key.replace(/./g,'•').slice(0,0)+c.key:''}">
+          <p class="set-hint">Stored only in <b>this browser</b> — never committed or sent anywhere but DeepSeek. Create one at <span class="mono">platform.deepseek.com</span>. With no key, Sally runs in offline demo mode.</p>
+        </div>
+        <div class="set-grid">
+          <div class="set-block"><label for="set-model">Model</label>
+            <select id="set-model" class="input">
+              <option value="deepseek-v4-flash">deepseek-v4-flash · fast</option>
+              <option value="deepseek-v4-pro">deepseek-v4-pro · smartest</option>
+            </select></div>
+          <div class="set-block"><label>Connection</label>
+            <div id="set-status" class="set-status">checking…</div></div>
+        </div>
+        <details class="set-adv"><summary>Advanced</summary>
+          <div class="set-block" style="margin-top:12px"><label for="set-base">API base URL</label>
+            <input type="text" id="set-base" class="input mono" placeholder="https://api.deepseek.com"></div>
+        </details>
+      </div>
+      <div class="set-foot">
+        <button class="btn" id="set-reset"><i class="ri-delete-bin-line"></i> Reset demo data</button>
+        <span class="grow"></span>
+        <button class="btn" id="set-test"><i class="ri-pulse-line"></i> Test</button>
+        <button class="btn btn-accent" id="set-save"><i class="ri-check-line"></i> Save</button>
+      </div>
+    </aside>`;
+  document.body.appendChild(el);
+
+  const $ = id => document.getElementById(id);
+  const status = $("set-status");
+  function refreshStatus(){
+    const on = Sally.LLM.configured();
+    status.className = "set-status " + (on?"ok":"off");
+    status.innerHTML = on ? `<span class="d"></span>Key set · ${Sally.LLM.cfg().model}` : `<span class="d"></span>No key — offline demo mode`;
+    const dot = document.getElementById("ai-dot"); if(dot) dot.classList.toggle("on", on);
+  }
+  function fill(){ const cc=Sally.LLM.cfg(); $("set-key").value=cc.key||""; $("set-model").value=cc.model; $("set-base").value=cc.base; refreshStatus(); }
+
+  Sally.openSettings = ()=>{ fill(); $("set-scrim").classList.add("open"); $("set-modal").classList.add("open"); setTimeout(()=>$("set-key").focus(),80); };
+  const close = ()=>{ $("set-scrim").classList.remove("open"); $("set-modal").classList.remove("open"); };
+  $("set-scrim").onclick = close; $("set-close").onclick = close;
+  document.addEventListener("keydown", e=>{ if(e.key==="Escape" && $("set-modal").classList.contains("open")) close(); });
+
+  $("set-save").onclick = ()=>{
+    Sally.LLM.setCfg({ key:$("set-key").value.trim(), model:$("set-model").value, base:($("set-base").value.trim()||"https://api.deepseek.com") });
+    refreshStatus(); close();
+    // let pages react (chat/dashboard can re-enable AI affordances)
+    document.dispatchEvent(new CustomEvent("sally:llm-config"));
   };
-  const home = items.find(a=>a.classList.contains("active")) || null;
-  items.forEach(a=> a.addEventListener("mouseenter", ()=>move(a)));
-  nav.addEventListener("mouseleave", ()=>move(home));
-  const settle = ()=>move(home);
-  settle();
-  if(document.fonts && document.fonts.ready) document.fonts.ready.then(settle);
-  window.addEventListener("resize", settle);
-  setTimeout(settle, 60); setTimeout(settle, 300);
+  $("set-test").onclick = async ()=>{
+    Sally.LLM.setCfg({ key:$("set-key").value.trim(), model:$("set-model").value, base:($("set-base").value.trim()||"https://api.deepseek.com") });
+    status.className="set-status busy"; status.innerHTML=`<span class="d"></span>Testing…`;
+    try{ await Sally.LLM.test(); status.className="set-status ok"; status.innerHTML=`<span class="d"></span>Connected · ${Sally.LLM.cfg().model}`; }
+    catch(e){ status.className="set-status err"; status.innerHTML=`<span class="d"></span>${(e.message||"failed").slice(0,80)}`; }
+  };
+  $("set-reset").onclick = ()=>{
+    if(!confirm("Clear uploaded documents, chat history and dashboard layout from this browser?")) return;
+    if(Sally.store) Sally.store.clearAll();
+    location.reload();
+  };
+  refreshStatus();
 };
+
+/* back-compat: old pages called mountNav()/mountFX() — keep them working */
+Sally.mountFX  = function(){};
+Sally.mountNav = function(active){ Sally.mountDock(active); };

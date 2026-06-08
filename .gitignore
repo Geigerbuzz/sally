@@ -1,0 +1,8 @@
+# reference project (not part of the Sally app)
+Davlon_Gamma-main/
+# local tooling / scratch
+.claude/
+_t.html
+# os cruft
+.DS_Store
+**/.DS_Store

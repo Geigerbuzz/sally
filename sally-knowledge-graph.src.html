@@ -4,35 +4,41 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sally — Knowledge Graph</title>
+<link rel="stylesheet" href="vendor/remixicon.css">
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 /* ===== Embedded fonts (base64 woff2, fully offline) ===== */
 /*__FONTS_CSS__*/
 
-/* ===== Design tokens (shared with the SDG compliance dashboard) ===== */
+/* ===== Design tokens (clean iOS-dark — shared with the rest of Sally) ===== */
 :root{
-  --ink:#0d0b16;          /* warm dark background           */
-  --ink-2:#100d1c;
+  --ink:#0f0f11;          /* near-black field               */
+  --ink-2:#161618;
   --ink-3:rgba(255,255,255,0.05);
-  --panel:rgba(26,22,40,0.74);
-  --panel-2:rgba(255,255,255,0.06);
-  --line:rgba(255,255,255,0.11);
-  --line-2:rgba(255,255,255,0.20);
-  --text:#f2eff8;
-  --muted:#b3aec6;
-  --faint:#7d7796;
-  --faint-2:#534e6b;
-  --glass-hi:rgba(255,255,255,0.14);
-  --display:'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
-  --body:'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --bg-surface:#1c1c1e;
+  --panel:rgba(28,28,30,0.88);
+  --panel-2:rgba(255,255,255,0.05);
+  --line:rgba(255,255,255,0.10);
+  --line-2:rgba(255,255,255,0.16);
+  --text:#ffffff;
+  --muted:#a1a1a6;
+  --faint:#8a8a8f;
+  --faint-2:#6e6e73;
+  --glass-hi:rgba(255,255,255,0.10);
+  --glass-bg:rgba(28,28,30,0.55);
+  --glass-border:rgba(255,255,255,0.12);
+  --display:'Inter', ui-sans-serif, system-ui, sans-serif;
+  --body:'Inter', ui-sans-serif, system-ui, sans-serif;
   --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
   --doc:#dfe3ea;          /* near-white documents */
   --concept:#7e8693;      /* muted grey concepts  */
-  --accent:#4841ff;       /* brand accent (chrome only; SDG colours stay data) */
-  --accent-2:#6f6bff;
-  --accent-3:#9a97ff;
-  --accent-glow:rgba(72,65,255,0.55);
-  --accent-soft:rgba(72,65,255,0.14);
-  --accent-line:rgba(72,65,255,0.40);
+  --accent:#0a84ff;       /* iOS-blue accent (chrome only; SDG colours stay data) */
+  --accent-2:#409cff;
+  --accent-3:#5ab0ff;
+  --accent-glow:rgba(10,132,255,0.5);
+  --accent-soft:rgba(10,132,255,0.14);
+  --accent-line:rgba(10,132,255,0.40);
+  --dock-width:64px; --dock-margin:16px;
 }
 
 *{box-sizing:border-box}
@@ -45,53 +51,57 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
-/* living-glass backdrop: base → aurora → frost (muted) — behind the graph */
-#backdrop{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none}
-#backdrop .fx-base{position:absolute; inset:0;
-  background:
-    radial-gradient(120% 120% at 18% 0%, #1a1530 0%, rgba(26,21,48,0) 55%),
-    radial-gradient(120% 130% at 100% 0%, #1d1640 0%, rgba(29,22,64,0) 50%),
-    radial-gradient(140% 140% at 50% 120%, #160f28 0%, rgba(13,11,22,0) 60%),
-    linear-gradient(180deg, #0e0b1a 0%, #0b0913 100%);}
-#backdrop .fx-aurora{position:absolute; inset:-15%}
-#backdrop .fx-aurora i{position:absolute; border-radius:50%; filter:blur(8px); opacity:.8; will-change:transform}
-#backdrop .fx-aurora i:nth-child(1){width:46vw;height:46vw; left:-6vw; top:-8vw;
-  background:radial-gradient(circle at 50% 50%, rgba(72,65,255,.8), rgba(72,65,255,0) 62%); animation:drift1 26s ease-in-out infinite}
-#backdrop .fx-aurora i:nth-child(2){width:40vw;height:40vw; right:-6vw; top:-10vw;
-  background:radial-gradient(circle at 50% 50%, rgba(157,123,255,.75), rgba(157,123,255,0) 62%); animation:drift2 31s ease-in-out infinite}
-#backdrop .fx-aurora i:nth-child(3){width:44vw;height:44vw; right:6vw; bottom:-16vw;
-  background:radial-gradient(circle at 50% 50%, rgba(79,227,207,.5), rgba(79,227,207,0) 62%); animation:drift3 35s ease-in-out infinite}
-#backdrop .fx-aurora i:nth-child(4){width:38vw;height:38vw; left:8vw; bottom:-14vw;
-  background:radial-gradient(circle at 50% 50%, rgba(255,143,166,.5), rgba(255,143,166,0) 62%); animation:drift4 29s ease-in-out infinite}
-@keyframes drift1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(6vw,5vh) scale(1.12)}}
-@keyframes drift2{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-5vw,6vh) scale(.92)}}
-@keyframes drift3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-6vw,-5vh) scale(1.15)}}
-@keyframes drift4{0%,100%{transform:translate(0,0) scale(1.08)}50%{transform:translate(5vw,-4vh) scale(.95)}}
-#backdrop .fx-frost{position:absolute; inset:0;
-  background:linear-gradient(180deg, rgba(13,11,22,0.42), rgba(11,9,19,0.58));
-  backdrop-filter:blur(64px) saturate(135%); -webkit-backdrop-filter:blur(64px) saturate(135%);}
-@media (prefers-reduced-motion: reduce){ #backdrop .fx-aurora i{animation:none} }
+/* clean near-black field — behind the graph */
+#backdrop{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+  background:radial-gradient(130% 120% at 50% -10%, #18181c 0%, #0f0f11 58%);}
 #vignette{
   position:fixed; inset:0; z-index:3; pointer-events:none;
-  box-shadow: inset 0 0 220px 50px rgba(0,0,0,0.6);
-  background:radial-gradient(120% 120% at 50% 50%, rgba(0,0,0,0) 58%, rgba(6,5,11,0.5) 100%);
+  box-shadow: inset 0 0 260px 70px rgba(0,0,0,0.55);
+  background:radial-gradient(120% 120% at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.45) 100%);
 }
 
+#neural-bg{position:fixed; inset:0; z-index:0; pointer-events:none}
 #graph{position:fixed; inset:0; z-index:1}
 canvas{display:block}
 
 /* ===== Top chrome bar (floating glass) ===== */
 #topbar{
-  position:fixed; z-index:5; top:14px; left:18px; right:18px;
-  display:flex; align-items:center; gap:18px;
-  padding:11px 18px; border-radius:24px;
-  background:linear-gradient(160deg, rgba(255,255,255,0.085), rgba(255,255,255,0.04));
-  backdrop-filter:blur(26px) saturate(160%); -webkit-backdrop-filter:blur(26px) saturate(160%);
-  border:1px solid var(--line);
-  box-shadow:0 1px 0 var(--glass-hi) inset, 0 24px 60px -28px rgba(0,0,0,.65);
+  position:fixed; z-index:5; top:16px; left:calc(var(--dock-width) + var(--dock-margin)*2); right:18px;
+  display:flex; align-items:center; gap:14px;
+  padding:10px 16px; border-radius:18px;
+  background:var(--glass-bg);
+  backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border:1px solid var(--glass-border);
+  box-shadow:0 1px 0 rgba(255,255,255,0.08) inset, 0 12px 40px -22px rgba(0,0,0,.6);
   pointer-events:none;
 }
 #topbar > *{pointer-events:auto}
+.kg-title{font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:-0.01em; color:var(--text); white-space:nowrap}
+
+/* ===== glass icon-dock (matches the rest of Sally) ===== */
+.floating-dock{ position:fixed; z-index:8; top:50%; left:var(--dock-margin); transform:translateY(-50%);
+  width:var(--dock-width); display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 0;
+  background:var(--glass-bg); backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+  border:1px solid var(--glass-border); border-radius:22px;
+  box-shadow:0 12px 40px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.10) inset; }
+.dock-brand{ display:flex; align-items:center; justify-content:center; width:40px;height:40px; margin-bottom:6px }
+.dock-brand .dot{ width:26px;height:26px;border-radius:9px; position:relative;
+  background:linear-gradient(140deg,#5ab0ff 0%,var(--accent) 55%,#0a5fd6 100%);
+  box-shadow:0 0 0 1px rgba(255,255,255,.22) inset, 0 6px 16px -6px var(--accent) }
+.dock-brand .dot::after{ content:""; position:absolute; inset:5px; border-radius:5px;
+  background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 60%) }
+.dock-items{ display:flex; flex-direction:column; align-items:center; gap:4px; width:100% }
+.dock-item{ position:relative; display:flex; align-items:center; justify-content:center;
+  width:44px;height:44px; color:var(--muted); font-size:22px; border-radius:13px; text-decoration:none;
+  transition:all .2s cubic-bezier(.2,.8,.2,1) }
+.dock-item:hover{ background:rgba(128,128,128,0.14); color:var(--text); transform:scale(1.06) }
+.dock-item.active{ color:#fff; background:linear-gradient(140deg,var(--accent-2),var(--accent));
+  box-shadow:0 6px 16px -6px var(--accent), 0 1px 0 rgba(255,255,255,.3) inset }
+.dock-item::before{ content:attr(data-label); position:absolute; left:calc(100% + 14px); top:50%;
+  transform:translateY(-50%) translateX(-6px); background:var(--bg-surface); color:var(--text); font-family:var(--body);
+  font-size:12px; font-weight:500; white-space:nowrap; padding:6px 10px; border-radius:8px; border:1px solid var(--line);
+  box-shadow:0 10px 30px rgba(0,0,0,.32); opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:5 }
+.dock-item:hover::before{ opacity:1; transform:translateY(-50%) translateX(0) }
 .brand{display:flex; align-items:baseline; gap:10px; user-select:none; text-decoration:none; color:inherit; cursor:pointer}
 .brand .logo{
   font-family:var(--display); font-weight:800; font-size:20px; letter-spacing:-0.02em;
@@ -231,28 +241,27 @@ nav a.active{color:#fff}
 </style>
 </head>
 <body>
-<div id="backdrop">
-  <div class="fx-base"></div>
-  <div class="fx-aurora"><i></i><i></i><i></i><i></i></div>
-  <div class="fx-frost"></div>
-</div>
+<div id="backdrop"></div>
+<canvas id="neural-bg"></canvas>
 <div id="graph"></div>
 <div id="vignette"></div>
 
 <!-- ===== Top chrome ===== -->
+<!-- ===== Glass icon-dock (primary nav, matches the rest of Sally) ===== -->
+<nav class="floating-dock" aria-label="Primary">
+  <a class="dock-brand" href="index.html" title="Sally home"><span class="dot"></span></a>
+  <div class="dock-items">
+    <a class="dock-item" href="index.html" data-label="Dashboard"><i class="ri-dashboard-line"></i></a>
+    <a class="dock-item" href="sally-ask.html" data-label="Ask Sally"><i class="ri-chat-3-line"></i></a>
+    <a class="dock-item" href="sally-documents.html" data-label="Documents"><i class="ri-file-list-2-line"></i></a>
+    <a class="dock-item active" href="sally-knowledge-graph.html" data-label="Knowledge Graph"><i class="ri-bubble-chart-line"></i></a>
+    <a class="dock-item" href="sally-sdg-compliance.html" data-label="Compliance"><i class="ri-shield-check-line"></i></a>
+  </div>
+</nav>
+
+<!-- ===== Top control bar (graph tools) ===== -->
 <header id="topbar">
-  <a class="brand" href="index.html" title="Sally home">
-    <span class="logo">Sal<b>ly</b></span>
-    <span class="dot"></span>
-    <span class="sub">Knowledge Graph</span>
-  </a>
-  <nav id="snav">
-    <span class="nav-pill" id="snavpill"></span>
-    <a href="sally-documents.html">Documents</a>
-    <a href="sally-ask.html">Ask Sally</a>
-    <a href="sally-sdg-compliance.html">Compliance</a>
-    <a href="sally-knowledge-graph.html" class="active">Graph</a>
-  </nav>
+  <span class="kg-title">Knowledge Graph</span>
 
   <div class="spacer"></div>
 
@@ -298,6 +307,10 @@ nav a.active{color:#fff}
 
 <!-- ===== Vendored force-graph (UMD, inlined for offline) ===== -->
 <script>/*__FORCE_GRAPH_JS__*/</script>
+
+<!-- ===== Neural field backdrop (drifting nodes; contain-on-hover) ===== -->
+<script src="assets/neurons.js"></script>
+<script>SallyNeurons(document.getElementById("neural-bg"), {max:82, density:19000, linkDist:122, linkAlpha:0.30, dotAlpha:0.72, dot:[0.8,1.9], pull:0.15, pullRadius:200});</script>
 
 <!-- ===== Graph application ===== -->
 <script>
@@ -518,9 +531,9 @@ function applyData(){
 
 /* dim level for a node given all active modes (0 = hidden-ish, 1 = full) */
 function nodeAlpha(n){
-  if(isolateSet)  return isolateSet.has(n.id) ? 1 : 0.06;
-  if(searchMatches) return searchMatches.has(n.id) ? 1 : 0.08;
-  if(hoverNode||selNode) return hiNodes.has(n) ? 1 : 0.10;
+  if(isolateSet)  return isolateSet.has(n.id) ? 1 : 0.15;
+  if(searchMatches) return searchMatches.has(n.id) ? 1 : 0.16;
+  if(hoverNode||selNode) return hiNodes.has(n) ? 1 : 0.16;
   return 1;
 }
 function linkAlphaMul(l){
@@ -574,7 +587,7 @@ Graph.nodeCanvasObject((n, ctx, scale)=>{
   // selected node → brand-accent ring
   if(selNode===n){
     ctx.beginPath(); ctx.arc(n.x,n.y, r+3.5/scale + 2, 0, 2*Math.PI);
-    ctx.lineWidth=2/scale; ctx.strokeStyle=hexA("#6f6bff",0.9); ctx.stroke();
+    ctx.lineWidth=2/scale; ctx.strokeStyle=hexA("#0a84ff",0.95); ctx.stroke();
   }
 
   // ----- labels (mono) -----
@@ -589,7 +602,7 @@ Graph.nodeCanvasObject((n, ctx, scale)=>{
     show = Math.max(onByZoom, onByFocus);
   }
   if(show>0.02){
-    const px = (n.type==="goal"?11:10);
+    const px = (n.type==="goal"?12:11);
     ctx.font = `${n.type==="goal"?600:500} ${px/scale}px 'IBM Plex Mono', monospace`;
     ctx.textAlign="center"; ctx.textBaseline="top";
     const label = n.label;
