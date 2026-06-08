@@ -166,6 +166,10 @@ nav a.active{color:#fff}
 .btn:hover{color:var(--text); border-color:var(--line-2); background:rgba(255,255,255,0.08); transform:translateY(-1px)}
 .btn:active{transform:translateY(1px)}
 .btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.7}
+.btn-up{color:#fff; background:linear-gradient(140deg,var(--accent-2),var(--accent)); border-color:transparent;
+  box-shadow:0 8px 20px -10px var(--accent)}
+.btn-up:hover{color:#fff; filter:brightness(1.08); background:linear-gradient(140deg,var(--accent-2),var(--accent))}
+.btn.busy{opacity:.6; pointer-events:none}
 
 /* ===== Legend (bottom-left) ===== */
 #legend{
@@ -276,6 +280,12 @@ nav a.active{color:#fff}
     <button class="on" data-type="document"><span class="pip"></span>Docs</button>
   </div>
 
+  <input type="file" id="pdfInput" accept="application/pdf" style="display:none">
+  <button class="btn btn-up" id="uploadBtn" title="Upload a PDF — Sally reads it and grows the graph">
+    <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
+    Upload PDF
+  </button>
+
   <button class="btn" id="replay" title="Re-run the layout">
     <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
     Replay
@@ -311,6 +321,13 @@ nav a.active{color:#fff}
 <!-- ===== Neural field backdrop (drifting nodes; contain-on-hover) ===== -->
 <script src="assets/neurons.js"></script>
 <script>SallyNeurons(document.getElementById("neural-bg"), {max:82, density:19000, linkDist:122, linkAlpha:0.30, dotAlpha:0.72, dot:[0.8,1.9], pull:0.15, pullRadius:200});</script>
+
+<!-- ===== Shared corpus + DeepSeek + persistence + PDF ingestion ===== -->
+<script src="vendor/pdf.min.js"></script>
+<script src="assets/corpus.js"></script>
+<script src="assets/llm.js"></script>
+<script src="assets/store.js"></script>
+<script src="assets/ingest.js"></script>
 
 <!-- ===== Graph application ===== -->
 <script>
@@ -905,8 +922,67 @@ function resize(){ Graph.width(window.innerWidth).height(window.innerHeight); }
 window.addEventListener("resize", resize);
 resize();
 
+/* ---------------------------------------------------------------------------
+   8.5  Uploaded PDFs → live nodes (persisted via Sally.store)
+--------------------------------------------------------------------------- */
+function ensureConceptNode(c){
+  const id="c-"+slug(c);
+  if(!byId[id]){
+    addNode({id, type:"concept", label:c, name:c, x:(Math.random()-0.5)*40, y:(Math.random()-0.5)*40,
+      _ph:Math.random()*6.283, _amp:1.4+Math.random()*1.8, deg:0});
+    const goals=(window.Sally&&Sally.CONCEPTS&&Sally.CONCEPTS[c]&&Sally.CONCEPTS[c].goals)||[];
+    goals.forEach(g=>{ if(byId["g"+g]) addLink(id,"g"+g,"concept-goal"); });
+  }
+  return id;
+}
+function recomputeSizes(){
+  nodes.forEach(n=> n.deg=0);
+  links.forEach(l=>{ const s=(typeof l.source==="object")?l.source.id:l.source, t=(typeof l.target==="object")?l.target.id:l.target;
+    if(byId[s]) byId[s].deg++; if(byId[t]) byId[t].deg++; });
+  nodes.forEach(n=>{ n.r = RING[n.type] + Math.sqrt(n.deg)*(n.type==="goal"?2.6:1.4); });
+}
+function addDocNode(doc, spotlight){
+  const did="d-"+slug(doc.name);
+  if(byId[did]){ if(spotlight){ selNode=byId[did]; recomputeHighlight(); openPanel(byId[did]); } return did; }
+  addNode({id:did, type:"document", label:doc.name, name:doc.name, code:doc.code,
+    x:(Math.random()-0.5)*24, y:(Math.random()-0.5)*24, _ph:Math.random()*6.283, _amp:1.4+Math.random()*1.8, deg:0, _new:true});
+  (doc.goals||[]).forEach(g=>{ if(byId["g"+g]) addLink(did,"g"+g,"doc-goal"); });
+  (doc.concepts||[]).forEach(c=>{ addLink(did, ensureConceptNode(c), "doc-concept"); });
+  recomputeSizes();
+  applyData();
+  // re-run the settle so the newcomer is pulled into place
+  warm=0; settled=false; driftOn=false; Graph.cooldownTicks(Infinity); if(Graph.d3ReheatSimulation) Graph.d3ReheatSimulation();
+  if(spotlight){
+    const n=byId[did]; selNode=n; recomputeHighlight(); openPanel(n);
+    setTimeout(()=>{ if(n.x!=null){ Graph.centerAt(n.x,n.y,1100); Graph.zoom(1.7,1100); } }, 1800);
+  }
+  return did;
+}
+window.SallyAddDoc = addDocNode;
+
 applyData();
 setStatus("Building the knowledge graph…");
+
+// pull in any previously uploaded docs (persistence across sessions)
+try{ if(window.Sally && Sally.store) Sally.store.docs().forEach(d=> addDocNode(d, false)); }catch(e){ console.warn(e); }
+
+// upload a PDF → extract → classify (DeepSeek or heuristic) → grow the graph
+(function uploadWiring(){
+  const inp=document.getElementById("pdfInput"), btn=document.getElementById("uploadBtn");
+  if(!inp||!btn) return;
+  btn.onclick=()=> inp.click();
+  inp.onchange=async ()=>{
+    const file=inp.files&&inp.files[0]; inp.value=""; if(!file) return;
+    if(!(window.Sally&&Sally.Ingest)){ setStatus("Ingestion unavailable"); return; }
+    btn.classList.add("busy"); setStatus(`Reading <b>${file.name}</b>…`);
+    try{
+      const doc=await Sally.Ingest.fromPDF(file, {onProgress:p=> setStatus(p.label||"Processing…")});
+      addDocNode(doc, true);
+      setStatus(`Added <b>${doc.name}</b> → SDG ${doc.goals.join(", ")} · ${doc.concepts.length} concept${doc.concepts.length>1?"s":""}`);
+    }catch(e){ console.error(e); setStatus("⚠️ "+(e.message||"ingestion failed")); }
+    btn.classList.remove("busy");
+  };
+})();
 
 // expose for presenter scripting / verification
 window.SallyGraph = Graph;
