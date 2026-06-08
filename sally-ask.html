@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ask Sally</title>
+<link rel="stylesheet" href="vendor/fonts.css">
+<link rel="stylesheet" href="assets/sally.css">
+<style>
+  body{height:100vh; display:flex; flex-direction:column; overflow:hidden}
+  .stage{flex:1; display:grid; grid-template-columns:1fr 372px; min-height:0; position:relative; z-index:1}
+
+  /* ---- chat column ---- */
+  .chat{display:flex; flex-direction:column; min-height:0; border-right:1px solid var(--line)}
+  .thread{flex:1; overflow-y:auto; padding:30px 0}
+  .thread .wrap{max-width:780px}
+  .msg{display:flex; gap:14px; margin:0 0 26px; animation:rise .4s ease both}
+  @keyframes rise{from{opacity:0; transform:translateY(8px)} to{opacity:1; transform:none}}
+  .msg .av{width:30px;height:30px;border-radius:9px; flex:none; display:flex;align-items:center;justify-content:center;
+    font-family:var(--mono); font-size:11px}
+  .msg.s .av{background:linear-gradient(140deg,var(--accent),#2b27c9); color:#fff; box-shadow:0 0 0 1px rgba(255,255,255,.12) inset}
+  .msg.u .av{background:var(--ink-4); border:1px solid var(--line); color:var(--muted)}
+  .msg .body{flex:1; min-width:0}
+  .msg .who{font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin:6px 0 7px}
+  .msg.u .bubble{color:var(--text); font-size:15.5px}
+  .msg.s .bubble{font-size:15.5px; line-height:1.62; color:#dfe2e8}
+  .bubble p{margin:0 0 11px}
+  .bubble .src-line{margin-top:14px; display:flex; align-items:center; gap:8px; flex-wrap:wrap}
+  .bubble .src-line .lbl{font-family:var(--mono); font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--faint)}
+  .typing{display:inline-flex; gap:4px; padding:4px 0}
+  .typing i{width:6px;height:6px;border-radius:50%; background:var(--accent-3); opacity:.5; animation:blink 1.2s infinite}
+  .typing i:nth-child(2){animation-delay:.2s} .typing i:nth-child(3){animation-delay:.4s}
+  @keyframes blink{0%,60%,100%{opacity:.25; transform:translateY(0)} 30%{opacity:1; transform:translateY(-3px)}}
+
+  /* suggested prompts */
+  .suggest{padding:0 0 14px}
+  .suggest .lbl{font-family:var(--mono); font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin-bottom:10px}
+  .suggest .chips{display:flex; gap:8px; flex-wrap:wrap}
+  .qchip{font-family:var(--body); font-size:13px; color:var(--muted); background:var(--ink-3);
+    border:1px solid var(--line); border-radius:999px; padding:8px 14px; cursor:pointer; transition:.15s}
+  .qchip:hover{color:var(--text); border-color:var(--accent-line); background:var(--accent-soft)}
+
+  /* composer */
+  .composer{border-top:1px solid var(--line); padding:16px 0 18px; background:linear-gradient(180deg, rgba(9,11,15,0) 0%, rgba(9,11,15,0.6) 100%)}
+  .composer .box{display:flex; gap:10px; align-items:flex-end; background:var(--ink-3); border:1px solid var(--line);
+    border-radius:16px; padding:8px 8px 8px 16px; transition:.16s}
+  .composer .box:focus-within{border-color:var(--accent-line); box-shadow:0 0 0 3px var(--accent-soft)}
+  .composer textarea{flex:1; resize:none; border:0; outline:0; background:transparent; color:var(--text);
+    font-family:var(--body); font-size:15px; line-height:1.5; max-height:120px; padding:7px 0}
+  .composer textarea::placeholder{color:var(--faint)}
+  .send{width:40px;height:40px;border-radius:11px; border:0; cursor:pointer; flex:none;
+    background:linear-gradient(140deg,var(--accent),#322dd6); color:#fff; display:flex;align-items:center;justify-content:center;
+    box-shadow:0 8px 22px -10px var(--accent-glow); transition:.15s}
+  .send:hover{filter:brightness(1.12)} .send:disabled{opacity:.4; cursor:default; filter:none}
+  .send svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2}
+  .composer .hint{font-family:var(--mono); font-size:9.5px; color:var(--faint-2); margin-top:9px; text-align:center; letter-spacing:.04em}
+
+  /* ---- sources rail ---- */
+  .rail{display:flex; flex-direction:column; min-height:0; background:rgba(11,13,18,0.5)}
+  .rail .rh{padding:20px 22px 14px; border-bottom:1px solid var(--line)}
+  .rail .rh .t{font-family:var(--display); font-weight:700; font-size:17px}
+  .rail .rh .s{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--faint); margin-top:5px}
+  .rail .list{flex:1; overflow-y:auto; padding:14px 16px 22px}
+  .srccard{border:1px solid var(--line); border-radius:12px; padding:14px; margin-bottom:11px; background:var(--panel-2);
+    transition:.18s; position:relative}
+  .srccard .num{position:absolute; top:-8px; left:12px; width:20px;height:20px;border-radius:6px;
+    background:var(--accent); color:#fff; font-family:var(--mono); font-size:10px; font-weight:600;
+    display:flex;align-items:center;justify-content:center; box-shadow:0 4px 12px -4px var(--accent-glow)}
+  .srccard.flash{border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft)}
+  .srccard .nm{font-family:var(--body); font-weight:600; font-size:14px; color:var(--text); margin:3px 0 2px; padding-right:8px}
+  .srccard .meta{font-family:var(--mono); font-size:9.5px; letter-spacing:.06em; color:var(--faint); margin-bottom:9px}
+  .srccard .snip{font-size:12.5px; color:var(--muted); line-height:1.5; border-left:2px solid var(--accent-line); padding-left:10px}
+  .srccard .pips{display:flex; gap:5px; margin-top:10px}
+  .srccard .pips i{width:9px;height:9px;border-radius:50%}
+  .rail .empty{padding:40px 22px; color:var(--faint); font-size:13px; text-align:center; line-height:1.6}
+  .rail .empty .ic{width:40px;height:40px;margin:0 auto 14px; border-radius:12px; border:1px solid var(--line);
+    display:flex;align-items:center;justify-content:center; color:var(--faint-2)}
+
+  @media (max-width:880px){ .stage{grid-template-columns:1fr} .rail{display:none} }
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+
+<header id="topbar"></header>
+
+<div class="stage">
+  <!-- chat -->
+  <section class="chat">
+    <div class="thread" id="thread">
+      <div class="wrap" id="threadInner"></div>
+    </div>
+    <div class="composer">
+      <div class="wrap" style="max-width:780px">
+        <div class="suggest" id="suggest">
+          <div class="lbl">Try asking</div>
+          <div class="chips" id="chips"></div>
+        </div>
+        <div class="box">
+          <textarea id="input" rows="1" placeholder="Ask about Lumina Components…"></textarea>
+          <button class="send" id="send" title="Send">
+            <svg viewBox="0 0 24 24"><path d="M7 11 12 6l5 5M12 6v13"/></svg>
+          </button>
+        </div>
+        <div class="hint">Sally answers only from the ${'{n}'} documents in the corpus — every claim links to its source.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- sources -->
+  <aside class="rail">
+    <div class="rh"><div class="t">Sources</div><div class="s" id="rcount">Citations appear here</div></div>
+    <div class="list" id="sources">
+      <div class="empty">
+        <div class="ic"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M6 3h8l4 4v14H6z"/><path d="M14 3v4h4"/></svg></div>
+        Ask a question and Sally will cite the exact documents and passages behind every answer.
+      </div>
+    </div>
+  </aside>
+</div>
+
+<script src="assets/corpus.js"></script>
+<script>
+Sally.mountNav("ask");
+const D = Sally.DOCS, byCode = Object.fromEntries(D.map(d=>[d.code,d]));
+
+/* ---------- tiny keyword retrieval over the corpus ---------- */
+const STOP = new Set(("the a an of to and or is are was were be been being how what which who whom whose does do did "+
+  "for in on at by with about into from as it its their your our we you they this that these those there here "+
+  "tell me give show whats what's whatre how's any some all more most can could would should will won't don't "+
+  "have has had not no yes so if then than over under up down out off again very much many lot get got make").split(/\s+/));
+function tokenize(s){ return s.toLowerCase().replace(/[^a-z0-9\s/&-]/g," ").split(/\s+/).filter(w=>w.length>1 && !STOP.has(w)); }
+function wordHits(hay, w){
+  const re = new RegExp("\\b"+w.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\b","g");
+  return (hay.match(re)||[]).length;
+}
+function retrieve(query, k=3){
+  const q = tokenize(query);
+  if(!q.length) return [];
+  const scored = D.map(d=>{
+    const hay = (d.name+" "+d.summary+" "+d.cite.t+" "+d.concepts.join(" ")+" "+d.type+" "+
+      d.goals.map(g=>Sally.sdg(g).name).join(" ")).toLowerCase();
+    const nameHay = d.name.toLowerCase();
+    let s=0;
+    q.forEach(w=>{
+      s += wordHits(hay, w);
+      if(wordHits(nameHay, w)) s += 2;                       // title match boost
+    });
+    d.concepts.forEach(c=>{                                   // concept match boost
+      const cl=c.toLowerCase();
+      if(q.some(w=>wordHits(cl,w) || cl.split(/[\s/&-]+/).includes(w))) s+=4;
+    });
+    return {d, s};
+  }).filter(x=>x.s>0).sort((a,b)=>b.s-a.s);
+  return scored.slice(0,k).map(x=>x.d);
+}
+
+/* compose a grounded answer (segments: strings + {cite:i}) */
+function compose(query, docs){
+  if(!docs.length){
+    return {segments:[{t:"I couldn't find anything in the current corpus that speaks to that. Try asking about energy and emissions, diversity and pay, workplace safety, training, governance, or partnerships."}], docs:[]};
+  }
+  // theme from the most common goal among hits
+  const goalCount={};
+  docs.forEach(d=>d.goals.forEach(g=>goalCount[g]=(goalCount[g]||0)+1));
+  const topGoal = Sally.sdg(+Object.entries(goalCount).sort((a,b)=>b[1]-a[1])[0][0]);
+  const seg=[];
+  seg.push({t:`Here's what ${Sally.company.name} reports on this, drawn from ${docs.length} source${docs.length>1?'s':''}`});
+  if(topGoal) seg.push({t:` — it bears most directly on `}, {t:`SDG ${topGoal.n}: ${topGoal.name}`, em:true}, {t:`.`});
+  else seg.push({t:`.`});
+  seg.push({br:true});
+  docs.forEach((d,i)=>{
+    const lead = i===0 ? "" : (i===1 ? "Alongside that, " : "And ");
+    seg.push({t:`${lead}The ${d.name} states that “${d.cite.t.replace(/\.$/,'')}”`});
+    seg.push({cite:i+1});
+    seg.push({t:`. `});
+  });
+  seg.push({br:true});
+  seg.push({t:`Want me to open any of these sources, or dig into a related topic?`, soft:true});
+  return {segments:seg, docs};
+}
+
+/* ---------- rendering ---------- */
+const thread = document.getElementById("threadInner");
+const threadScroll = document.getElementById("thread");
+const sourcesEl = document.getElementById("sources");
+const rcount = document.getElementById("rcount");
+let citeSeq = 0;
+
+function addUser(text){
+  const el=document.createElement("div"); el.className="msg u";
+  el.innerHTML=`<div class="av">You</div><div class="body"><div class="who">You</div><div class="bubble">${escapeHtml(text)}</div></div>`;
+  thread.appendChild(el); scrollDown();
+}
+function escapeHtml(s){return s.replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));}
+
+function addSallyTyping(){
+  const el=document.createElement("div"); el.className="msg s";
+  el.innerHTML=`<div class="av">S</div><div class="body"><div class="who">Sally</div><div class="bubble"><span class="typing"><i></i><i></i><i></i></span></div></div>`;
+  thread.appendChild(el); scrollDown();
+  return el;
+}
+
+async function streamAnswer(query){
+  const docs = retrieve(query, 3);
+  const {segments} = compose(query, docs);
+  const baseCite = citeSeq; // offset so chip numbers match the rail across turns
+  const typingEl = addSallyTyping();
+  await wait(620);
+  const bubble = typingEl.querySelector(".bubble"); bubble.innerHTML="";
+  const p = document.createElement("p"); bubble.appendChild(p);
+  let cur = p;
+  for(const s of segments){
+    if(s.br){ cur=document.createElement("p"); bubble.appendChild(cur); continue; }
+    if(s.cite!=null){
+      const idx = baseCite + s.cite;
+      const chip=document.createElement("span"); chip.className="cite"; chip.textContent=idx;
+      chip.onclick=()=>flashSource(idx);
+      cur.appendChild(chip); scrollDown(); await wait(90); continue;
+    }
+    // stream words
+    const words=(s.t||"").split(/(\s+)/);
+    const span=document.createElement("span");
+    if(s.em) span.className="accent";
+    if(s.soft) span.style.color="var(--faint)";
+    cur.appendChild(span);
+    for(const w of words){ span.append(w); scrollDown(); await wait(w.trim()?16:0); }
+  }
+  // commit sources to the rail
+  if(docs.length){
+    renderSources(docs, baseCite);
+    citeSeq += docs.length;
+  }
+  scrollDown();
+}
+
+function renderSources(docs, base){
+  if(sourcesEl.querySelector(".empty")) sourcesEl.innerHTML="";
+  docs.forEach((d,i)=>{
+    const idx=base+i+1;
+    const card=document.createElement("div"); card.className="srccard"; card.id="src-"+idx;
+    card.innerHTML=`
+      <div class="num">${idx}</div>
+      <div class="nm">${d.name}</div>
+      <div class="meta">${d.code} · p.${d.cite.p} · ${d.type} · ${d.date}</div>
+      <div class="snip">${d.cite.t}</div>
+      <div class="pips">${d.goals.map(g=>`<i title="SDG ${g}" style="background:${Sally.sdg(g).color}"></i>`).join("")}</div>`;
+    card.onclick=()=> location.href="sally-documents.html#"+d.code;
+    sourcesEl.appendChild(card);
+  });
+  const total=sourcesEl.querySelectorAll(".srccard").length;
+  rcount.textContent = total+" citation"+(total>1?"s":"");
+}
+function flashSource(idx){
+  const el=document.getElementById("src-"+idx); if(!el) return;
+  el.scrollIntoView({behavior:"smooth", block:"center"});
+  el.classList.remove("flash"); void el.offsetWidth; el.classList.add("flash");
+  setTimeout(()=>el.classList.remove("flash"), 1400);
+}
+
+const wait = ms => new Promise(r=>setTimeout(r,ms));
+function scrollDown(){ threadScroll.scrollTop = threadScroll.scrollHeight; }
+
+/* ---------- input wiring ---------- */
+const input=document.getElementById("input"), send=document.getElementById("send");
+let busy=false;
+function autosize(){ input.style.height="auto"; input.style.height=Math.min(120,input.scrollHeight)+"px"; }
+input.addEventListener("input", autosize);
+async function submit(){
+  const text=input.value.trim(); if(!text||busy) return;
+  busy=true; send.disabled=true;
+  document.getElementById("suggest").style.display="none";
+  addUser(text); input.value=""; autosize();
+  await streamAnswer(text);
+  busy=false; send.disabled=false; input.focus();
+}
+send.onclick=submit;
+input.addEventListener("keydown",e=>{ if(e.key==="Enter"&&!e.shiftKey){ e.preventDefault(); submit(); }});
+
+/* suggested prompts */
+const SUGGEST=[
+  "How is Lumina cutting its carbon emissions?",
+  "What's being done on diversity and pay equity?",
+  "Tell me about workplace safety.",
+  "What renewable energy initiatives are in place?",
+  "How does the company invest in training?",
+  "What governance and anti-corruption controls exist?",
+];
+document.getElementById("chips").innerHTML = SUGGEST.map(q=>`<button class="qchip">${q}</button>`).join("");
+document.querySelectorAll(".qchip").forEach(b=> b.onclick=()=>{ input.value=b.textContent; submit(); });
+
+document.querySelector(".composer .hint").textContent =
+  `Sally answers only from the ${D.length} documents in the corpus — every claim links to its source.`;
+
+/* opening greeting */
+(function intro(){
+  const el=document.createElement("div"); el.className="msg s";
+  el.innerHTML=`<div class="av">S</div><div class="body"><div class="who">Sally</div>
+    <div class="bubble"><p>Hi — I'm Sally. I've read all ${D.length} of ${Sally.company.name}'s documents.
+    Ask me anything about the business and I'll answer with citations you can verify. Pick a prompt below to start.</p></div></div>`;
+  thread.appendChild(el);
+})();
+</script>
+</body>
+</html>

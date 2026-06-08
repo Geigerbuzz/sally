@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documents — Sally</title>
+<link rel="stylesheet" href="vendor/fonts.css">
+<link rel="stylesheet" href="assets/sally.css">
+<style>
+  .head{position:relative; z-index:1; padding:34px 0 20px}
+  .head h1{font-size:34px}
+  .head .sub{color:var(--muted); margin-top:8px; font-size:15px}
+  .toolbar{position:relative; z-index:1; display:flex; gap:12px; align-items:center; margin:22px 0 8px; flex-wrap:wrap}
+  .toolbar .search{flex:1; min-width:220px; max-width:360px}
+  .toolbar .count{font-family:var(--mono); font-size:11px; color:var(--faint); letter-spacing:.06em; margin-left:auto}
+  .filters{display:flex; gap:6px; flex-wrap:wrap; position:relative; z-index:1; margin-bottom:24px}
+  .fchip{font-family:var(--mono); font-size:10px; letter-spacing:.06em; text-transform:uppercase; color:var(--muted);
+    background:var(--ink-3); border:1px solid var(--line); padding:7px 12px; border-radius:999px; cursor:pointer; transition:.15s;
+    display:inline-flex; align-items:center; gap:7px}
+  .fchip:hover{color:var(--text); border-color:var(--line-2)}
+  .fchip.on{color:var(--accent-3); background:var(--accent-soft); border-color:var(--accent-line)}
+  .fchip .pip{width:8px;height:8px;border-radius:50%}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; position:relative; z-index:1; padding-bottom:80px}
+  .doc{padding:18px; cursor:pointer; display:flex; flex-direction:column; min-height:178px}
+  .doc .top{display:flex; align-items:flex-start; gap:12px}
+  .doc .fi{width:40px;height:48px;border-radius:7px; flex:none; position:relative;
+    background:linear-gradient(160deg,#1b2030,#12151d); border:1px solid var(--line-2)}
+  .doc .fi::before{content:""; position:absolute; top:0; right:0; width:13px;height:13px;
+    background:var(--ink); border-left:1px solid var(--line-2); border-bottom:1px solid var(--line-2); border-bottom-left-radius:4px}
+  .doc .fi::after{content:""; position:absolute; left:8px; right:8px; top:20px; height:2px; border-radius:2px;
+    background:var(--faint-2); box-shadow:0 5px 0 var(--faint-2), 0 10px 0 var(--faint-2)}
+  .doc .code{font-family:var(--mono); font-size:9.5px; letter-spacing:.08em; color:var(--faint)}
+  .doc h3{font-size:16px; margin:3px 0 0; line-height:1.25}
+  .doc .meta{font-family:var(--mono); font-size:9.5px; color:var(--faint); margin-top:6px}
+  .doc p{color:var(--muted); font-size:12.8px; line-height:1.5; margin:12px 0 0; flex:1}
+  .doc .tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:13px}
+  .doc .sdgs{display:flex; gap:4px; margin-top:12px}
+  .doc .sdgs i{width:11px;height:11px;border-radius:50%}
+
+  /* drawer */
+  .scrim{position:fixed; inset:0; z-index:70; background:rgba(4,5,8,0.6); backdrop-filter:blur(3px);
+    opacity:0; pointer-events:none; transition:.3s}
+  .scrim.open{opacity:1; pointer-events:auto}
+  .drawer{position:fixed; z-index:71; top:0; right:0; height:100%; width:440px; max-width:92vw;
+    background:var(--panel); border-left:1px solid var(--line); backdrop-filter:blur(16px);
+    transform:translateX(104%); transition:transform .42s cubic-bezier(.22,.61,.36,1); display:flex; flex-direction:column;
+    box-shadow:-30px 0 80px rgba(0,0,0,.5)}
+  .drawer.open{transform:none}
+  .drawer .dh{padding:26px 26px 22px; border-bottom:1px solid var(--line); position:relative}
+  .drawer .dclose{position:absolute; top:20px; right:20px; width:30px;height:30px;border-radius:8px; cursor:pointer;
+    display:flex;align-items:center;justify-content:center; color:var(--faint); border:1px solid var(--line); background:rgba(255,255,255,.03)}
+  .drawer .dclose:hover{color:var(--text); border-color:var(--line-2)}
+  .drawer .eyebrow{margin-bottom:12px}
+  .drawer h2{font-size:24px; line-height:1.18; padding-right:30px}
+  .drawer .dmeta{font-family:var(--mono); font-size:10.5px; color:var(--faint); margin-top:12px; display:flex; gap:14px; flex-wrap:wrap}
+  .drawer .dbody{padding:20px 26px 26px; overflow-y:auto; flex:1}
+  .drawer .blk{margin-bottom:22px}
+  .drawer .blk h4{font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint); margin:0 0 11px}
+  .drawer .snip{font-size:14px; color:#dfe2e8; line-height:1.6; border-left:2px solid var(--accent-line); padding:2px 0 2px 13px}
+  .drawer .row2{display:flex; gap:9px; flex-wrap:wrap}
+  .sgoal{display:flex; align-items:center; gap:9px; padding:9px 12px; border:1px solid var(--line); border-radius:10px; background:rgba(255,255,255,.02); flex:1; min-width:160px}
+  .sgoal i{width:11px;height:11px;border-radius:50%; flex:none}
+  .sgoal .nm{font-size:13px; color:var(--text)} .sgoal .nm small{display:block; font-family:var(--mono); font-size:9px; color:var(--faint); letter-spacing:.08em}
+  .drawer .dfoot{padding:16px 26px; border-top:1px solid var(--line); display:flex; gap:10px}
+  .drawer .dfoot .btn{flex:1; justify-content:center}
+</style>
+</head>
+<body>
+<div class="backdrop"></div>
+<header id="topbar"></header>
+
+<main class="wrap">
+  <div class="head">
+    <div class="eyebrow accent">Source corpus</div>
+    <h1>Documents</h1>
+    <div class="sub">Every file Sally has read — tagged with the concepts it covers and the goals it advances.</div>
+  </div>
+
+  <div class="toolbar">
+    <div class="search input" style="padding:0; border:0; background:none">
+      <div class="search" style="width:100%">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input class="input" id="q" placeholder="Search documents, concepts, snippets…">
+      </div>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+  <div class="filters" id="filters"></div>
+
+  <div class="grid" id="grid"></div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <div class="dh">
+    <div class="dclose" id="dclose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+    <div class="eyebrow" id="dType"></div>
+    <h2 id="dTitle"></h2>
+    <div class="dmeta" id="dMeta"></div>
+  </div>
+  <div class="dbody" id="dBody"></div>
+  <div class="dfoot">
+    <a class="btn" id="dAsk"><svg viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12 7.6L3 21l1.9-6A8.4 8.4 0 1 1 21 11.5Z"/></svg>Ask Sally about this</a>
+    <a class="btn" href="sally-knowledge-graph.html">View in graph</a>
+  </div>
+</aside>
+
+<script src="assets/corpus.js"></script>
+<script>
+Sally.mountNav("documents");
+const D=Sally.DOCS;
+const grid=document.getElementById("grid"), countEl=document.getElementById("count");
+let activeConcept=null, query="";
+
+/* filter chips = concepts */
+const filtersEl=document.getElementById("filters");
+filtersEl.innerHTML = `<button class="fchip on" data-c="">All concepts</button>` +
+  Object.keys(Sally.CONCEPTS).map(c=>`<button class="fchip" data-c="${c}"><span class="pip" style="background:${Sally.sdg(Sally.CONCEPTS[c].goals[0]).color}"></span>${c}</button>`).join("");
+filtersEl.querySelectorAll(".fchip").forEach(b=> b.onclick=()=>{
+  filtersEl.querySelectorAll(".fchip").forEach(x=>x.classList.remove("on")); b.classList.add("on");
+  activeConcept=b.dataset.c||null; render();
+});
+
+document.getElementById("q").addEventListener("input",e=>{ query=e.target.value.trim().toLowerCase(); render(); });
+
+function match(d){
+  if(activeConcept && !d.concepts.includes(activeConcept)) return false;
+  if(!query) return true;
+  return (d.name+" "+d.summary+" "+d.cite.t+" "+d.concepts.join(" ")+" "+d.code+" "+d.type).toLowerCase().includes(query);
+}
+function render(){
+  const list=D.filter(match);
+  countEl.textContent=`${list.length} of ${D.length} documents`;
+  grid.innerHTML=list.map(d=>`
+    <div class="card link doc" data-code="${d.code}">
+      <div class="top">
+        <div class="fi"></div>
+        <div style="min-width:0">
+          <div class="code">${d.code}</div>
+          <h3>${d.name}</h3>
+          <div class="meta">${d.type} · ${d.pages} pp · ${d.date}</div>
+        </div>
+      </div>
+      <p>${d.summary}</p>
+      <div class="tags">${d.concepts.map(c=>`<span class="chip">${c}</span>`).join("")}</div>
+      <div class="sdgs">${d.goals.map(g=>`<i title="SDG ${g}: ${Sally.sdg(g).name}" style="background:${Sally.sdg(g).color}"></i>`).join("")}</div>
+    </div>`).join("") || `<div class="faint mono" style="padding:30px">No documents match.</div>`;
+  grid.querySelectorAll(".doc").forEach(el=> el.onclick=()=>open(el.dataset.code));
+}
+
+/* drawer */
+const scrim=document.getElementById("scrim"), drawer=document.getElementById("drawer");
+function open(code){
+  const d=D.find(x=>x.code===code); if(!d) return;
+  document.getElementById("dType").textContent=d.type+" · "+d.date;
+  document.getElementById("dTitle").textContent=d.name;
+  document.getElementById("dMeta").innerHTML=`<span>${d.code}</span><span>${d.pages} pages</span><span>${d.concepts.length} concepts</span><span>${d.goals.length} goals</span>`;
+  document.getElementById("dBody").innerHTML=`
+    <div class="blk"><h4>Summary</h4><div class="muted" style="font-size:14px;line-height:1.6">${d.summary}</div></div>
+    <div class="blk"><h4>Key passage · p.${d.cite.p}</h4><div class="snip">“${d.cite.t}”</div></div>
+    <div class="blk"><h4>Concepts</h4><div class="row2">${d.concepts.map(c=>`<span class="chip accent">${c}</span>`).join("")}</div></div>
+    <div class="blk"><h4>Advances goals</h4><div class="row2">${d.goals.map(g=>{const s=Sally.sdg(g);return `<div class="sgoal"><i style="background:${s.color}"></i><span class="nm">${s.name}<small>SDG ${g}</small></span></div>`}).join("")}</div></div>`;
+  document.getElementById("dAsk").href="sally-ask.html";
+  scrim.classList.add("open"); drawer.classList.add("open");
+  history.replaceState(null,"","#"+code);
+}
+function close(){ scrim.classList.remove("open"); drawer.classList.remove("open"); history.replaceState(null,"",location.pathname); }
+scrim.onclick=close; document.getElementById("dclose").onclick=close;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
+
+render();
+if(location.hash) open(location.hash.slice(1));
+</script>
+</body>
+</html>
