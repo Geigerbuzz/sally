@@ -52,16 +52,31 @@ body{
   -webkit-font-smoothing:antialiased;
 }
 
-/* clean near-black field — behind the graph */
-#backdrop{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
-  background:radial-gradient(130% 120% at 50% -10%, #18181c 0%, #0f0f11 58%);}
-#vignette{
-  position:fixed; inset:0; z-index:3; pointer-events:none;
-  box-shadow: inset 0 0 260px 70px rgba(0,0,0,0.55);
-  background:radial-gradient(120% 120% at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.45) 100%);
-}
-
-#neural-bg{position:fixed; inset:0; z-index:0; pointer-events:none}
+/* animated frosted backdrop — colour blobs → frost → grain (injected by Sally.mountFX) */
+.bg{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:radial-gradient(125% 120% at 50% -5%, #181426 0%, #0a0812 72%)}
+.bg-blobs{position:absolute; inset:-25%; filter:blur(60px) saturate(160%); animation:bgHue 80s linear infinite}
+.bg-blobs i{position:absolute; display:block; border-radius:50%; mix-blend-mode:screen; opacity:.6; will-change:transform}
+.bg-blobs i:nth-child(1){width:48vw;height:48vw; left:-8vw; top:-10vw; background:radial-gradient(circle at 50% 50%, #5b4bff, rgba(91,75,255,0) 60%); animation:bgD1 34s ease-in-out infinite}
+.bg-blobs i:nth-child(2){width:42vw;height:42vw; right:-8vw; top:-6vw; background:radial-gradient(circle at 50% 50%, #ff5c9a, rgba(255,92,154,0) 60%); animation:bgD2 41s ease-in-out infinite}
+.bg-blobs i:nth-child(3){width:46vw;height:46vw; right:2vw; bottom:-16vw; background:radial-gradient(circle at 50% 50%, #2fe3cf, rgba(47,227,207,0) 60%); animation:bgD3 38s ease-in-out infinite}
+.bg-blobs i:nth-child(4){width:40vw;height:40vw; left:4vw; bottom:-14vw; background:radial-gradient(circle at 50% 50%, #9b6bff, rgba(155,107,255,0) 60%); animation:bgD4 45s ease-in-out infinite}
+.bg-blobs i:nth-child(5){width:34vw;height:34vw; left:30vw; top:24vh; background:radial-gradient(circle at 50% 50%, #ffb24d, rgba(255,178,77,0) 62%); animation:bgD5 52s ease-in-out infinite}
+.bg-blobs i:nth-child(6){width:36vw;height:36vw; right:24vw; top:38vh; background:radial-gradient(circle at 50% 50%, #3aa0ff, rgba(58,160,255,0) 62%); animation:bgD6 47s ease-in-out infinite}
+@keyframes bgHue{from{filter:blur(60px) saturate(160%) hue-rotate(0deg)} to{filter:blur(60px) saturate(160%) hue-rotate(360deg)}}
+@keyframes bgD1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(7vw,6vh) scale(1.18)}}
+@keyframes bgD2{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-6vw,7vh) scale(.9)}}
+@keyframes bgD3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-7vw,-6vh) scale(1.2)}}
+@keyframes bgD4{0%,100%{transform:translate(0,0) scale(1.08)}50%{transform:translate(6vw,-5vh) scale(.92)}}
+@keyframes bgD5{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vw,4vh) scale(1.22)}}
+@keyframes bgD6{0%,100%{transform:translate(0,0) scale(1.04)}50%{transform:translate(5vw,-6vh) scale(.88)}}
+.bg-frost{position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,8,18,0.40), rgba(7,6,13,0.56)); backdrop-filter:blur(48px) saturate(125%); -webkit-backdrop-filter:blur(48px) saturate(125%)}
+.bg-grain{position:absolute; inset:-6%; opacity:.055; mix-blend-mode:overlay; animation:bgGrain 6s steps(7) infinite;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+@keyframes bgGrain{0%{transform:translate(0,0)}14%{transform:translate(-4%,2%)}28%{transform:translate(3%,-3%)}42%{transform:translate(-2%,4%)}57%{transform:translate(4%,1%)}71%{transform:translate(-3%,-2%)}85%{transform:translate(2%,3%)}100%{transform:translate(0,0)}}
+@media (prefers-reduced-motion:reduce){.bg-blobs,.bg-blobs i,.bg-grain{animation:none}}
+#vignette{position:fixed; inset:0; z-index:3; pointer-events:none;
+  box-shadow:inset 0 0 260px 70px rgba(0,0,0,0.55);
+  background:radial-gradient(120% 120% at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.40) 100%)}
 #graph{position:fixed; inset:0; z-index:1}
 canvas{display:block}
 
@@ -270,8 +285,6 @@ canvas{display:block}
 </style>
 </head>
 <body>
-<div id="backdrop"></div>
-<canvas id="neural-bg"></canvas>
 <div id="graph"></div>
 <div id="vignette"></div>
 
@@ -332,10 +345,6 @@ canvas{display:block}
 
 <!-- ===== Vendored force-graph (UMD, inlined for offline) ===== -->
 <script>/*__FORCE_GRAPH_JS__*/</script>
-
-<!-- ===== Neural field backdrop (drifting nodes; contain-on-hover) ===== -->
-<script src="assets/neurons.js"></script>
-<script>SallyNeurons(document.getElementById("neural-bg"), {max:82, density:19000, linkDist:122, linkAlpha:0.30, dotAlpha:0.72, dot:[0.8,1.9], pull:0.15, pullRadius:200});</script>
 
 <!-- ===== Shared corpus + DeepSeek + persistence + PDF ingestion ===== -->
 <script src="vendor/pdf.min.js"></script>

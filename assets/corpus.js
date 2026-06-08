@@ -202,6 +202,7 @@ Sally.initTheme = function(){
 
 Sally.mountDock = function(active){
   const t = Sally.initTheme();
+  Sally.mountFX();
   const aiOn = Sally.LLM && Sally.LLM.configured();
   let dock = document.querySelector(".floating-dock");
   if(!dock){ dock = document.createElement("nav"); dock.className="floating-dock"; document.body.appendChild(dock); }
@@ -296,6 +297,16 @@ Sally.mountSettings = function(){
   refreshStatus();
 };
 
-/* back-compat: old pages called mountNav()/mountFX() — keep them working */
-Sally.mountFX  = function(){};
+/* animated frosted backdrop — colour blobs → frost → grain (styled in sally.css) */
+Sally.mountFX = function(){
+  if(document.querySelector(".bg")) return;
+  const bg = document.createElement("div"); bg.className = "bg";
+  bg.innerHTML = `<div class="bg-blobs"><i></i><i></i><i></i><i></i><i></i><i></i></div>`+
+                 `<div class="bg-frost"></div><div class="bg-grain"></div>`;
+  document.body.insertBefore(bg, document.body.firstChild);
+  const vig = document.createElement("div"); vig.className = "bg-vignette";
+  document.body.insertBefore(vig, bg.nextSibling);
+};
+
+/* back-compat: old pages called mountNav() — keep it working */
 Sally.mountNav = function(active){ Sally.mountDock(active); };

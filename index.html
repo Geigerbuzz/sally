@@ -7,10 +7,8 @@
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('sally-theme')||'dark')}catch(e){}</script>
 <link rel="stylesheet" href="assets/sally.css">
 <style>
-  /* neural field sits behind everything; content + dock float above it */
-  .neural-bg{ position:fixed; inset:0; z-index:0; pointer-events:none }
-  .shell{ position:relative; z-index:1 }
-  #widget-grid{ background-image:none }           /* the neural field replaces the peg-dots */
+  .shell{ position:relative; z-index:1 }          /* content floats above the animated backdrop */
+  #widget-grid{ background-image:none }            /* the frosted colour field is the texture */
   .dash-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:8px }
   .dash-head h1{ margin-top:8px }
   .dash-head .sub{ color:var(--text-secondary); margin-top:8px; font-size:15px; max-width:60ch; line-height:1.5 }
@@ -19,7 +17,6 @@
 </style>
 </head>
 <body>
-<canvas id="neural-bg" class="neural-bg"></canvas>
 
 <main class="shell">
   <div class="inner">
@@ -68,12 +65,10 @@
 <script src="assets/corpus.js"></script>
 <script src="assets/llm.js"></script>
 <script src="assets/store.js"></script>
-<script src="assets/neurons.js"></script>
 <script src="assets/widgets.js"></script>
 <script src="assets/dashboard.js"></script>
 <script>
   Sally.mountDock("dashboard");
-  SallyNeurons(document.getElementById("neural-bg"));
   (function(){
     const h = new Date().getHours();
     const part = h<12 ? "Good morning" : h<18 ? "Good afternoon" : "Good evening";
