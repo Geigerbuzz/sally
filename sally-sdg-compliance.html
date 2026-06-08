@@ -29,9 +29,10 @@
   .sumstat .l{ font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary); margin-top:8px }
   .sumstat p{ font-size:12.5px; color:var(--text-secondary); margin:9px 0 0; line-height:1.5 }
 
-  /* ---- "All 17 goals" header ---- */
-  .gtitle{ display:flex; align-items:center; gap:12px; margin:6px 0 16px }
-  .gtitle .ln{ flex:1; height:1px; background:var(--hairline) }
+  /* ---- goals category bar ---- */
+  .goals-bar{ display:flex; align-items:center; justify-content:space-between; gap:12px; margin:8px 0 20px; flex-wrap:wrap }
+  .goals-bar .note{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-tertiary) }
+  .empty-note{ color:var(--text-tertiary); font-family:var(--mono); font-size:12px; padding:30px 4px }
 
   /* ---- grid of 17 tiles ---- */
   .sdgrid{ display:grid; grid-template-columns:repeat(auto-fill,minmax(248px,1fr)); gap:14px; padding-bottom:24px }
@@ -91,7 +92,7 @@
     <div class="sumstats" id="sumstats"></div>
   </section>
 
-  <div class="gtitle"><span class="eyebrow">All 17 goals</span><span class="ln"></span><span class="eyebrow" id="sortnote">sorted by coverage</span></div>
+  <div class="goals-bar"><div class="tabs" id="tabs"></div><span class="note">Sorted by coverage</span></div>
   <div class="sdgrid" id="grid"></div>
  </div>
 </main>
@@ -138,26 +139,36 @@ const ov=Sally.overallScore();
 
 const strongCount=Sally.SDG.filter(g=>Sally.scoreForGoal(g.n).status==="Strong").length;
 document.getElementById("sumstats").innerHTML=[
-  {n:ov.covered+"/17", l:"Goals with evidence", cls:"acc", p:"Goals backed by at least one source document."},
-  {n:strongCount, l:"Rated strong", cls:"strong", p:"Goals with deep, multi-source coverage."},
-  {n:ov.gaps, l:"Coverage gaps", cls:"gap", p:"Goals with no supporting evidence yet."},
-  {n:Sally.DOCS.length, l:"Documents assessed", cls:"", p:"Total sources in the corpus Sally scored."},
-].map(s=>`<div class="sumstat"><div class="n ${s.cls}">${s.n}</div><div class="l">${s.l}</div><p>${s.p}</p></div>`).join("");
+  {n:ov.covered+"/17", l:"Goals with evidence", cls:"acc"},
+  {n:strongCount, l:"Rated strong", cls:"strong"},
+  {n:ov.gaps, l:"Coverage gaps", cls:"gap"},
+  {n:Sally.DOCS.length, l:"Documents assessed", cls:""},
+].map(s=>`<div class="sumstat"><div class="n ${s.cls}">${s.n}</div><div class="l">${s.l}</div></div>`).join("");
 
-/* tiles, sorted by coverage desc */
+/* tiles, sorted by coverage desc — filtered by the status tabs */
 const grid=document.getElementById("grid");
 const rows=Sally.SDG.map(g=>({g, sc:Sally.scoreForGoal(g.n)})).sort((a,b)=>b.sc.pct-a.sc.pct);
-grid.innerHTML=rows.map(({g,sc})=>`
-  <div class="card link tile ${sc.status==='Gap'?'gap':''}" style="--c:${g.color}" data-n="${g.n}">
-    <div class="th">
-      <div class="badge">${g.n}</div>
-      <div style="min-width:0"><div class="nm">${g.short}</div><div class="full">SDG ${g.n}</div></div>
-      <span class="status-pill ${sc.status}">${sc.status}</span>
-    </div>
-    <div class="barrow"><div class="bar"><i style="width:${sc.pct}%"></i></div><div class="pctn">${sc.pct}%</div></div>
-    <div class="ev">${sc.docs} evidence doc${sc.docs!==1?'s':''} · ${sc.concepts} concept${sc.concepts!==1?'s':''}</div>
-  </div>`).join("");
-grid.querySelectorAll(".tile").forEach(el=> el.onclick=()=>open(+el.dataset.n));
+const inStatus={ all:()=>true, strong:r=>r.sc.status==="Strong",
+  building:r=>["Solid","Developing","Emerging"].includes(r.sc.status), gaps:r=>r.sc.status==="Gap" };
+let activeStatus="all";
+function renderTiles(){
+  const list=rows.filter(r=>inStatus[activeStatus](r));
+  grid.innerHTML=list.map(({g,sc})=>`
+    <div class="card link tile ${sc.status==='Gap'?'gap':''}" style="--c:${g.color}" data-n="${g.n}">
+      <div class="th">
+        <div class="badge">${g.n}</div>
+        <div style="min-width:0"><div class="nm">${g.short}</div><div class="full">SDG ${g.n}</div></div>
+        <span class="status-pill ${sc.status}">${sc.status}</span>
+      </div>
+      <div class="barrow"><div class="bar"><i style="width:${sc.pct}%"></i></div><div class="pctn">${sc.pct}%</div></div>
+      <div class="ev">${sc.docs} evidence doc${sc.docs!==1?'s':''} · ${sc.concepts} concept${sc.concepts!==1?'s':''}</div>
+    </div>`).join("") || `<div class="empty-note">No goals in this group.</div>`;
+  grid.querySelectorAll(".tile").forEach(el=> el.onclick=()=>open(+el.dataset.n));
+}
+const STAB=[{id:"all",label:"All goals"},{id:"strong",label:"Strong"},{id:"building",label:"Building"},{id:"gaps",label:"Gaps"}];
+document.getElementById("tabs").innerHTML = STAB.map(t=>`<button class="tab" data-tab="${t.id}"><span>${t.label}</span><span class="n">${rows.filter(r=>inStatus[t.id](r)).length}</span></button>`).join("");
+Sally.mountTabs(document.getElementById("tabs"), id=>{ activeStatus=id; renderTiles(); });
+renderTiles();
 
 /* drawer */
 const scrim=document.getElementById("scrim"), drawer=document.getElementById("drawer");

@@ -193,13 +193,32 @@ h3{font-size:16px; font-weight:600}
 /* dock-clearing content wrapper used by document-flow pages */
 .shell{ min-height:100vh; padding-left:calc(var(--dock-width) + var(--dock-margin)*2); transition:padding .4s var(--ease) }
 body.dock-right .shell{ padding-left:0; padding-right:calc(var(--dock-width) + var(--dock-margin)*2) }
-.shell .inner{ max-width:var(--maxw); margin:0 auto; padding:30px var(--content-pad) 96px; animation:fadeIn .4s ease }
+.shell .inner{ max-width:var(--maxw); margin:0 auto; padding:46px var(--content-pad) 96px; animation:fadeIn .4s ease }
 @keyframes fadeIn{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
 
-.page-head{ margin-bottom:26px }
-.page-head .eyebrow{ margin-bottom:10px }
-.page-head .sub{ color:var(--text-secondary); margin-top:10px; font-size:15px; max-width:70ch; line-height:1.55 }
-.page-head.row{ display:flex; align-items:center; justify-content:space-between; gap:20px }
+/* Apple-style page header: big quiet title, generous air, a tab bar for sub-views */
+.page-head{ margin-bottom:32px }
+.page-head h1{ font-size:38px; font-weight:600; letter-spacing:-0.028em; line-height:1.05 }
+.page-head .eyebrow{ margin-bottom:13px }
+.page-head .sub{ color:var(--text-secondary); margin-top:9px; font-size:16px; max-width:60ch; line-height:1.5 }
+.page-head.row{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap }
+.page-head .head-actions{ display:flex; align-items:center; gap:12px }
+
+/* segmented tab control — change category within a page (Davlon-style, from the top) */
+.tabs{ position:relative; display:inline-flex; align-items:center; gap:2px; padding:4px; border-radius:14px;
+  background:var(--glass-bg); backdrop-filter:blur(16px) saturate(150%); -webkit-backdrop-filter:blur(16px) saturate(150%);
+  border:1px solid var(--glass-border); box-shadow:0 1px 0 var(--glass-hi) inset }
+.tab{ position:relative; z-index:1; font-family:var(--font); font-size:13px; font-weight:500; color:var(--text-secondary);
+  padding:8px 16px; border-radius:10px; cursor:pointer; border:none; background:transparent;
+  transition:color .2s var(--ease); white-space:nowrap; display:inline-flex; align-items:center; gap:7px }
+.tab:hover{ color:var(--text-primary) }
+.tab.active{ color:var(--text-primary) }
+.tab .n{ font-size:11px; color:var(--text-tertiary); font-variant-numeric:tabular-nums }
+.tab.active .n{ color:var(--text-secondary) }
+.tab-ind{ position:absolute; z-index:0; top:4px; left:4px; height:calc(100% - 8px); width:0; border-radius:10px;
+  background:rgba(255,255,255,0.12); box-shadow:0 1px 4px rgba(0,0,0,.22), 0 1px 0 rgba(255,255,255,.14) inset;
+  transition:transform .28s var(--ease), width .28s var(--ease) }
+[data-theme="light"] .tab-ind{ background:#fff; box-shadow:0 1px 4px rgba(0,0,0,.10) }
 
 /* ====================== glass icon-dock ====================== */
 .floating-dock{

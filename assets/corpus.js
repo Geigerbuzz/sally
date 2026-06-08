@@ -297,6 +297,22 @@ Sally.mountSettings = function(){
   refreshStatus();
 };
 
+/* segmented tabs — sub-views within a page. nav contains .tab[data-tab] buttons. */
+Sally.mountTabs = function(nav, onSelect){
+  if(!nav) return null;
+  let ind = nav.querySelector(".tab-ind");
+  if(!ind){ ind = document.createElement("span"); ind.className = "tab-ind"; nav.insertBefore(ind, nav.firstChild); }
+  const tabs = [...nav.querySelectorAll(".tab")];
+  const move = el => { if(!el) return; ind.style.width = el.offsetWidth+"px"; ind.style.transform = `translateX(${el.offsetLeft-4}px)`; };
+  function select(el, fire){ tabs.forEach(t=>t.classList.toggle("active", t===el)); move(el); if(fire!==false) onSelect && onSelect(el.dataset.tab, el); }
+  tabs.forEach(t=> t.addEventListener("click", ()=> select(t)));
+  if(!nav.querySelector(".tab.active") && tabs[0]) tabs[0].classList.add("active");
+  const settle = ()=> move(nav.querySelector(".tab.active"));
+  settle(); if(document.fonts && document.fonts.ready) document.fonts.ready.then(settle);
+  setTimeout(settle,60); setTimeout(settle,300); window.addEventListener("resize", settle);
+  return { select:(val)=>{ const el=tabs.find(t=>t.dataset.tab===val); if(el) select(el); }, refresh:settle };
+};
+
 /* animated frosted backdrop — colour blobs → frost → grain (styled in sally.css) */
 Sally.mountFX = function(){
   if(document.querySelector(".bg")) return;

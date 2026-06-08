@@ -7,38 +7,28 @@
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('sally-theme')||'dark')}catch(e){}</script>
 <link rel="stylesheet" href="assets/sally.css">
 <style>
-  /* ---- toolbar ---- */
-  .toolbar{display:flex; gap:12px; align-items:center; margin:0 0 14px; flex-wrap:wrap}
-  .toolbar .search{flex:1; min-width:220px; max-width:380px}
-  .toolbar .count{font-family:var(--mono); font-size:11px; color:var(--text-tertiary); letter-spacing:.06em; margin-left:auto}
+  /* category bar: tabs (left) · search + add (right) */
+  .doc-bar{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:26px; flex-wrap:wrap}
+  .doc-bar .bar-right{display:flex; align-items:center; gap:10px}
+  .doc-bar .search{width:240px}
+  .doc-bar .search input{padding-top:9px; padding-bottom:9px}
 
-  /* ---- concept filter chips (built on the shared .chip look) ---- */
-  .filters{display:flex; gap:8px; flex-wrap:wrap; margin-bottom:26px}
-  .fchip{display:inline-flex; align-items:center; gap:7px; white-space:nowrap; cursor:pointer;
-    font-size:12px; font-weight:500; color:var(--text-secondary);
-    background:rgba(255,255,255,0.05); border:1px solid var(--border);
-    padding:6px 12px; border-radius:var(--radius-pill); transition:.16s var(--ease)}
-  [data-theme="light"] .fchip{background:rgba(0,0,0,0.03)}
-  .fchip:hover{color:var(--text-primary); border-color:var(--border-2)}
-  .fchip.on{color:var(--accent); background:var(--accent-soft); border-color:var(--accent-line)}
-  .fchip .pip{width:8px;height:8px;border-radius:50%; flex:none}
-
-  /* ---- document grid + cards ---- */
-  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(290px,1fr)); gap:16px; padding-bottom:20px}
-  .doc{padding:18px; cursor:pointer; display:flex; flex-direction:column; min-height:186px}
-  .doc .top{display:flex; align-items:flex-start; gap:12px}
-  .doc .fi{width:40px;height:44px;border-radius:10px; flex:none;
+  /* document grid + cards */
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; padding-bottom:20px}
+  .doc{padding:20px; cursor:pointer; display:flex; flex-direction:column; min-height:190px}
+  .doc .top{display:flex; align-items:flex-start; gap:13px}
+  .doc .fi{width:40px;height:44px;border-radius:11px; flex:none;
     display:flex; align-items:center; justify-content:center;
     background:var(--accent-soft); color:var(--accent); font-size:20px}
   .doc .code{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary)}
   .doc h3{font-size:16px; font-weight:600; color:var(--text-primary); margin:4px 0 0; line-height:1.25}
   .doc .meta{font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--text-tertiary); margin-top:6px}
-  .doc p{color:var(--text-secondary); font-size:13px; line-height:1.5; margin:12px 0 0; flex:1}
-  .doc .tags{display:flex; gap:6px; flex-wrap:wrap; margin-top:13px}
-  .doc .sdgs{display:flex; gap:5px; margin-top:12px}
+  .doc p{color:var(--text-secondary); font-size:13px; line-height:1.55; margin:13px 0 0; flex:1}
+  .doc .sdgs{display:flex; gap:5px; margin-top:14px}
   .doc .sdgs i{width:11px;height:11px;border-radius:50%}
+  .empty-note{color:var(--text-tertiary); font-family:var(--mono); font-size:12px; padding:40px 4px}
 
-  /* ---- drawer page-specific bits (base .scrim/.drawer/.dh/.dbody/.blk/.dfoot live in sally.css) ---- */
+  /* drawer page-specific bits (base .scrim/.drawer/... live in sally.css) */
   .drawer .eyebrow{margin-bottom:12px}
   .drawer h2{font-size:24px; line-height:1.18; padding-right:34px}
   .drawer .dmeta{font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--text-tertiary);
@@ -52,6 +42,8 @@
   .sgoal i{width:11px;height:11px;border-radius:50%; flex:none}
   .sgoal .nm{font-size:13px; color:var(--text-primary)}
   .sgoal .nm small{display:block; font-family:var(--mono); font-size:9px; color:var(--text-tertiary); letter-spacing:.08em; margin-top:2px}
+
+  @media (max-width:680px){ .doc-bar .search{width:100%} .doc-bar .bar-right{flex:1} }
 </style>
 </head>
 <body>
@@ -61,19 +53,20 @@
     <div class="page-head">
       <div class="eyebrow accent">Source corpus</div>
       <h1>Documents</h1>
-      <div class="sub">Every file Sally has read — tagged with the concepts it covers and the goals it advances.</div>
+      <div class="sub">Everything Sally has read — grouped by kind, searchable, and tagged with the goals it advances.</div>
     </div>
 
-    <div class="toolbar">
-      <div class="search">
-        <i class="ri-search-line"></i>
-        <input class="input" id="q" placeholder="Search documents, concepts, snippets…">
+    <div class="doc-bar">
+      <div class="tabs" id="tabs"></div>
+      <div class="bar-right">
+        <div class="search">
+          <i class="ri-search-line"></i>
+          <input class="input" id="q" placeholder="Search…">
+        </div>
+        <input type="file" id="pdfInput" accept="application/pdf" style="display:none">
+        <button class="btn btn-sm" id="uploadBtn" title="Add a PDF — Sally reads it and tags it"><i class="ri-add-line"></i> Add PDF</button>
       </div>
-      <input type="file" id="pdfInput" accept="application/pdf" style="display:none">
-      <button class="btn btn-accent btn-sm" id="uploadBtn"><i class="ri-upload-2-line"></i> Upload PDF</button>
-      <span class="count" id="count"></span>
     </div>
-    <div class="filters" id="filters"></div>
 
     <div class="grid" id="grid"></div>
   </div>
@@ -102,42 +95,51 @@
 <script>
 Sally.mountDock("documents");
 const D=Sally.DOCS;
-const grid=document.getElementById("grid"), countEl=document.getElementById("count");
-let activeConcept=null, query="";
+const grid=document.getElementById("grid");
+let activeGroup="all", query="";
 
-/* filter chips = concepts */
-const filtersEl=document.getElementById("filters");
-filtersEl.innerHTML = `<button class="fchip on" data-c="">All concepts</button>` +
-  Object.keys(Sally.CONCEPTS).map(c=>`<button class="fchip" data-c="${c}"><span class="pip" style="background:${Sally.sdg(Sally.CONCEPTS[c].goals[0]).color}"></span>${c}</button>`).join("");
-filtersEl.querySelectorAll(".fchip").forEach(b=> b.onclick=()=>{
-  filtersEl.querySelectorAll(".fchip").forEach(x=>x.classList.remove("on")); b.classList.add("on");
-  activeConcept=b.dataset.c||null; render();
-});
+/* category tabs by document kind (replaces the long concept-chip row) */
+const GROUPS=[
+  {id:"all",        label:"All",        types:null},
+  {id:"reports",    label:"Reports",    types:["Report","Review","Dashboard","Brief"]},
+  {id:"policies",   label:"Policies",   types:["Policy","Charter","Code"]},
+  {id:"audits",     label:"Audits",     types:["Audit"]},
+  {id:"strategies", label:"Strategies", types:["Strategy"]},
+  {id:"records",    label:"Records",    types:["Register","Record","Memo","Log","Upload"]},
+];
+const inGroup=(d,g)=> !g.types || g.types.includes(d.type);
+function buildTabs(){
+  const nav=document.getElementById("tabs");
+  nav.innerHTML = GROUPS
+    .filter(g=> g.id==="all" || D.some(d=>inGroup(d,g)))
+    .map(g=>`<button class="tab" data-tab="${g.id}"><span>${g.label}</span><span class="n">${D.filter(d=>inGroup(d,g)).length}</span></button>`).join("");
+  Sally.mountTabs(nav, id=>{ activeGroup=id; render(); });
+}
 
 document.getElementById("q").addEventListener("input",e=>{ query=e.target.value.trim().toLowerCase(); render(); });
 
 function match(d){
-  if(activeConcept && !d.concepts.includes(activeConcept)) return false;
+  const g=GROUPS.find(x=>x.id===activeGroup);
+  if(g && !inGroup(d,g)) return false;
   if(!query) return true;
-  return (d.name+" "+d.summary+" "+d.cite.t+" "+d.concepts.join(" ")+" "+d.code+" "+d.type).toLowerCase().includes(query);
+  return (d.name+" "+d.summary+" "+(d.cite&&d.cite.t||"")+" "+(d.concepts||[]).join(" ")+" "+d.code+" "+d.type).toLowerCase().includes(query);
 }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function render(){
   const list=D.filter(match);
-  countEl.textContent=`${list.length} of ${D.length} documents`;
   grid.innerHTML=list.map(d=>`
-    <div class="card link doc" data-code="${d.code}">
+    <div class="card link doc" data-code="${esc(d.code)}">
       <div class="top">
         <div class="fi"><i class="ri-file-text-line"></i></div>
         <div style="min-width:0">
-          <div class="code">${d.code}</div>
-          <h3>${d.name}</h3>
-          <div class="meta">${d.type} · ${d.pages} pp · ${d.date}</div>
+          <div class="code">${esc(d.code)}</div>
+          <h3>${esc(d.name)}</h3>
+          <div class="meta">${esc(d.type)} · ${d.pages} pp · ${esc(d.date)}</div>
         </div>
       </div>
-      <p>${d.summary}</p>
-      <div class="tags">${d.concepts.map(c=>`<span class="chip">${c}</span>`).join("")}</div>
-      <div class="sdgs">${d.goals.map(g=>`<i title="SDG ${g}: ${Sally.sdg(g).name}" style="background:${Sally.sdg(g).color}"></i>`).join("")}</div>
-    </div>`).join("") || `<div class="faint mono" style="padding:30px">No documents match.</div>`;
+      <p>${esc(d.summary)}</p>
+      <div class="sdgs">${(d.goals||[]).map(g=>`<i title="SDG ${g}: ${esc((Sally.sdg(g)||{}).name)}" style="background:${(Sally.sdg(g)||{}).color||'#888'}"></i>`).join("")}</div>
+    </div>`).join("") || `<div class="empty-note">No documents match.</div>`;
   grid.querySelectorAll(".doc").forEach(el=> el.onclick=()=>open(el.dataset.code));
 }
 
@@ -148,12 +150,12 @@ function open(code){
   if(!d){ history.replaceState(null,"",location.pathname); return; }
   document.getElementById("dType").textContent=d.type+" · "+d.date;
   document.getElementById("dTitle").textContent=d.name;
-  document.getElementById("dMeta").innerHTML=`<span>${d.code}</span><span>${d.pages} pages</span><span>${d.concepts.length} concepts</span><span>${d.goals.length} goals</span>`;
+  document.getElementById("dMeta").innerHTML=`<span>${esc(d.code)}</span><span>${d.pages} pages</span><span>${(d.concepts||[]).length} concepts</span><span>${(d.goals||[]).length} goals</span>`;
   document.getElementById("dBody").innerHTML=`
-    <div class="blk"><h4>Summary</h4><div class="muted" style="font-size:14px;line-height:1.6">${d.summary}</div></div>
-    <div class="blk"><h4>Key passage · p.${d.cite.p}</h4><div class="snip">“${d.cite.t}”</div></div>
-    <div class="blk"><h4>Concepts</h4><div class="row2">${d.concepts.map(c=>`<span class="chip accent">${c}</span>`).join("")}</div></div>
-    <div class="blk"><h4>Advances goals</h4><div class="row2">${d.goals.map(g=>{const s=Sally.sdg(g);return `<div class="sgoal"><i style="background:${s.color}"></i><span class="nm">${s.name}<small>SDG ${g}</small></span></div>`}).join("")}</div></div>`;
+    <div class="blk"><h4>Summary</h4><div class="muted" style="font-size:14px;line-height:1.6">${esc(d.summary)}</div></div>
+    <div class="blk"><h4>Key passage · p.${(d.cite&&d.cite.p)||1}</h4><div class="snip">“${esc(d.cite&&d.cite.t||"")}”</div></div>
+    <div class="blk"><h4>Concepts</h4><div class="row2">${(d.concepts||[]).map(c=>`<span class="chip accent">${esc(c)}</span>`).join("")}</div></div>
+    <div class="blk"><h4>Advances goals</h4><div class="row2">${(d.goals||[]).map(g=>{const s=Sally.sdg(g)||{};return `<div class="sgoal"><i style="background:${s.color||'#888'}"></i><span class="nm">${esc(s.name)}<small>SDG ${g}</small></span></div>`}).join("")}</div></div>`;
   document.getElementById("dAsk").href="sally-ask.html?q="+encodeURIComponent("Summarise the "+d.name+" and which SDGs it supports.");
   scrim.classList.add("open"); drawer.classList.add("open");
   history.replaceState(null,"","#"+code);
@@ -162,6 +164,7 @@ function close(){ scrim.classList.remove("open"); drawer.classList.remove("open"
 scrim.onclick=close; document.getElementById("dclose").onclick=close;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
 
+buildTabs();
 render();
 if(location.hash) open(decodeURIComponent(location.hash.slice(1)));
 
@@ -175,7 +178,7 @@ if(location.hash) open(decodeURIComponent(location.hash.slice(1)));
     const orig=btn.innerHTML; btn.disabled=true; btn.innerHTML=`<i class="ri-loader-4-line spin"></i> Reading…`;
     try{
       const doc=await Sally.Ingest.fromPDF(file,{onProgress:p=>{ btn.innerHTML=`<i class="ri-loader-4-line spin"></i> ${(p.label||"Processing").replace(/…$/,"")}…`; }});
-      render(); open(doc.code);
+      buildTabs(); render(); open(doc.code);
     }catch(e){ alert("Couldn't ingest that PDF: "+e.message); }
     btn.disabled=false; btn.innerHTML=orig;
   };

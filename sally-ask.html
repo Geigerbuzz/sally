@@ -382,12 +382,10 @@ function restore(){
 
 /* ---------- suggested prompts + hint ---------- */
 const SUGGEST=[
-  "How is Lumina cutting its carbon emissions?",
+  "How is Lumina cutting carbon emissions?",
   "What's being done on diversity and pay equity?",
   "Tell me about workplace safety.",
-  "What renewable energy initiatives are in place?",
-  "How does the company invest in training?",
-  "What governance and anti-corruption controls exist?",
+  "What governance controls exist?",
 ];
 document.getElementById("chips").innerHTML = SUGGEST.map(q=>`<button class="chip qchip">${q}</button>`).join("");
 document.querySelectorAll(".qchip").forEach(b=> b.onclick=()=>{ input.value=b.textContent; submit(); });
