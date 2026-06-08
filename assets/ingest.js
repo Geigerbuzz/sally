@@ -7,6 +7,8 @@ window.Sally = window.Sally || {};
 
 Sally.Ingest = (function(){
 
+  const TYPES = ["Report","Policy","Audit","Strategy","Memo","Charter","Register","Brief","Record","Dashboard","Review","Upload"];
+
   function ready(){
     if(window.pdfjsLib && pdfjsLib.GlobalWorkerOptions){
       if(!pdfjsLib.GlobalWorkerOptions.workerSrc) pdfjsLib.GlobalWorkerOptions.workerSrc = "vendor/pdf.worker.min.js";
@@ -94,7 +96,7 @@ Sally.Ingest = (function(){
     const concepts = (a.concepts||[]).filter(c=>typeof c==="string" && c.trim()).map(c=>c.trim()).slice(0,5);
     const kp = a.keyPassage || {};
     const doc = {
-      name, code, type: a.type || "Upload",
+      name, code, type: TYPES.indexOf(a.type) >= 0 ? a.type : "Upload",
       date: new Date().toISOString().slice(0,7),
       pages: numPages,
       goals: goals.length ? goals : [9],

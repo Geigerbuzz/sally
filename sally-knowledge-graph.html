@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Sally — Knowledge Graph</title>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('sally-theme')||'dark')}catch(e){}</script>
 <link rel="stylesheet" href="vendor/remixicon.css">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
@@ -115,19 +116,43 @@ canvas{display:block}
 .brand .logo b{color:var(--accent-3)}
 .brand .sub{font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint)}
 
-/* nav */
-nav{position:relative; display:flex; gap:2px; margin-left:6px; padding:4px;
-  border-radius:999px; background:rgba(0,0,0,0.18); border:1px solid var(--line)}
-nav a{position:relative; z-index:1;
-  font-family:var(--mono); font-size:11px; letter-spacing:.1em; text-transform:uppercase;
-  color:var(--faint); text-decoration:none; padding:8px 13px; border-radius:999px; transition:color .2s;
-}
-nav a:hover{color:var(--muted)}
-nav a.active{color:#fff}
-.nav-pill{position:absolute; z-index:0; top:4px; left:4px; height:calc(100% - 8px); width:0;
-  border-radius:999px; background:linear-gradient(140deg, var(--accent-2), var(--accent));
-  box-shadow:0 6px 18px -6px var(--accent-glow), 0 1px 0 rgba(255,255,255,.25) inset;
-  transition:transform .34s cubic-bezier(.3,.9,.3,1.1), width .34s cubic-bezier(.3,.9,.3,1.1), opacity .2s; opacity:0}
+/* settings modal (injected by Sally.mountSettings via mountDock) + ai-status dot */
+.dock-item .dock-dot{ position:absolute; right:7px; top:7px; width:7px;height:7px;border-radius:50%; background:#ffd60a; border:1.5px solid var(--ink) }
+.dock-item .dock-dot.on{ background:#32d74b }
+.scrim{ position:fixed; inset:0; z-index:400; background:rgba(0,0,0,0.5); backdrop-filter:blur(4px); opacity:0; pointer-events:none; transition:.3s }
+.scrim.open{ opacity:1; pointer-events:auto }
+.settings-modal{ position:fixed; z-index:402; top:50%; left:50%; transform:translate(-50%,-46%) scale(.98);
+  width:92%; max-width:464px; max-height:86vh; overflow:auto; background:var(--bg-surface); border:1px solid var(--line);
+  border-radius:20px; box-shadow:0 24px 70px rgba(0,0,0,.55); opacity:0; pointer-events:none;
+  transition:.28s cubic-bezier(.2,.8,.2,1); display:flex; flex-direction:column; color:var(--text) }
+.settings-modal.open{ opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1) }
+.set-head{ display:flex; align-items:flex-start; justify-content:space-between; padding:22px 24px 14px; border-bottom:1px solid var(--line) }
+.set-head h2{ font-family:var(--display); font-weight:600; font-size:20px; margin:4px 0 0 }
+.set-body{ padding:18px 24px; display:flex; flex-direction:column; gap:18px }
+.set-block{ display:flex; flex-direction:column; gap:8px }
+.set-block label{ font-size:12px; font-weight:600; color:var(--muted) }
+.set-hint{ font-size:12px; color:var(--faint); line-height:1.5 }
+.set-grid{ display:grid; grid-template-columns:1fr 1fr; gap:14px }
+.set-status{ display:flex; align-items:center; gap:8px; font-size:12px; color:var(--muted); padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:rgba(255,255,255,.03) }
+.set-status .d{ width:8px;height:8px;border-radius:50%; background:var(--faint); flex:none }
+.set-status.ok{ color:#32d74b } .set-status.ok .d{ background:#32d74b }
+.set-status.off .d{ background:#ffd60a }
+.set-status.err{ color:#ff453a } .set-status.err .d{ background:#ff453a }
+.set-status.busy .d{ background:var(--accent); animation:pulseDot 1s infinite }
+@keyframes pulseDot{50%{opacity:.3}}
+.set-adv summary{ font-size:12px; color:var(--muted); cursor:pointer }
+.set-foot{ display:flex; align-items:center; gap:10px; padding:16px 24px; border-top:1px solid var(--line) }
+.settings-modal .input{ width:100%; font-family:var(--body); font-size:14px; color:var(--text); background:var(--ink-3);
+  border:1px solid var(--line); border-radius:12px; padding:11px 13px; outline:none }
+.settings-modal .input:focus{ border-color:var(--accent-line); box-shadow:0 0 0 3px var(--accent-soft) }
+.settings-modal .grow{ flex:1 }
+.settings-modal .eyebrow{ font-family:var(--mono); font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--faint) }
+.settings-modal .eyebrow.accent{ color:var(--accent-3) }
+.settings-modal .dclose{ width:32px;height:32px;border-radius:9px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  color:var(--muted); border:1px solid var(--line); background:rgba(255,255,255,.03); font-size:17px }
+.settings-modal .dclose:hover{ color:var(--text) }
+.btn-accent{ color:#fff; background:linear-gradient(140deg,var(--accent-2),var(--accent)); border-color:transparent }
+.btn-accent:hover{ color:#fff; filter:brightness(1.08); background:linear-gradient(140deg,var(--accent-2),var(--accent)) }
 
 .spacer{flex:1}
 
@@ -255,17 +280,7 @@ nav a.active{color:#fff}
 <div id="vignette"></div>
 
 <!-- ===== Top chrome ===== -->
-<!-- ===== Glass icon-dock (primary nav, matches the rest of Sally) ===== -->
-<nav class="floating-dock" aria-label="Primary">
-  <a class="dock-brand" href="index.html" title="Sally home"><span class="dot"></span></a>
-  <div class="dock-items">
-    <a class="dock-item" href="index.html" data-label="Dashboard"><i class="ri-dashboard-line"></i></a>
-    <a class="dock-item" href="sally-ask.html" data-label="Ask Sally"><i class="ri-chat-3-line"></i></a>
-    <a class="dock-item" href="sally-documents.html" data-label="Documents"><i class="ri-file-list-2-line"></i></a>
-    <a class="dock-item active" href="sally-knowledge-graph.html" data-label="Knowledge Graph"><i class="ri-bubble-chart-line"></i></a>
-    <a class="dock-item" href="sally-sdg-compliance.html" data-label="Compliance"><i class="ri-shield-check-line"></i></a>
-  </div>
-</nav>
+<!-- ===== Glass icon-dock (injected by Sally.mountDock — gives Settings + theme toggle, consistent with every page) ===== -->
 
 <!-- ===== Top control bar (graph tools) ===== -->
 <header id="topbar">
@@ -337,6 +352,7 @@ qr.readability=function(t,n){var e=qr(t),r=qr(n);return(Math.max(e.getLuminance(
 <script src="assets/llm.js"></script>
 <script src="assets/store.js"></script>
 <script src="assets/ingest.js"></script>
+<script>try{ Sally.mountDock("graph"); }catch(e){ console.warn("dock mount failed", e); }</script>
 
 <!-- ===== Graph application ===== -->
 <script>
@@ -579,6 +595,7 @@ function hexA(hex,a){
   const r=parseInt(x.substr(0,2),16),g=parseInt(x.substr(2,2),16),b=parseInt(x.substr(4,2),16);
   return `rgba(${r},${g},${b},${a})`;
 }
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 
 Graph.nodeCanvasObject((n, ctx, scale)=>{
   const a = nodeAlpha(n);
@@ -810,7 +827,7 @@ function neighborItems(n, typeFilter){
   return arr.map(x=>`
     <div class="item" data-go="${x.id}">
       ${dotFor(x)}
-      <span class="nm">${x.type==="goal" ? ("SDG "+x.num+" · "+x.name) : x.name}</span>
+      <span class="nm">${x.type==="goal" ? ("SDG "+x.num+" · "+esc(x.name)) : esc(x.name)}</span>
       <span class="meta">${metaFor(x)}</span>
     </div>`).join("");
 }
@@ -822,7 +839,7 @@ function openPanel(n){
   else { typeLabel="Source Document"; swatch=`<span class="swatch" style="background:transparent;border:1.5px solid var(--doc)"></span>`; }
 
   elType.innerHTML = swatch + typeLabel;
-  elTitle.textContent = n.type==="goal" ? n.name : n.name;
+  elTitle.textContent = n.name;
   elCode.textContent = n.type==="goal" ? ("Goal "+n.num+" of 17") : (n.type==="document" ? ("Reference "+(n.code||"")) : (n.deg+" connections in the corpus"));
 
   let html="";
@@ -951,7 +968,7 @@ function recomputeSizes(){
   nodes.forEach(n=>{ n.r = RING[n.type] + Math.sqrt(n.deg)*(n.type==="goal"?2.6:1.4); });
 }
 function addDocNode(doc, spotlight){
-  const did="d-"+slug(doc.name);
+  const did="d-"+slug(doc.code||doc.name);   // key by code so an upload sharing a name still gets a distinct node
   if(byId[did]){ if(spotlight){ selNode=byId[did]; recomputeHighlight(); openPanel(byId[did]); } return did; }
   addNode({id:did, type:"document", label:doc.name, name:doc.name, code:doc.code,
     x:(Math.random()-0.5)*24, y:(Math.random()-0.5)*24, _ph:Math.random()*6.283, _amp:1.4+Math.random()*1.8, deg:0, _new:true});
@@ -983,11 +1000,11 @@ try{ if(window.Sally && Sally.store) Sally.store.docs().forEach(d=> addDocNode(d
   inp.onchange=async ()=>{
     const file=inp.files&&inp.files[0]; inp.value=""; if(!file) return;
     if(!(window.Sally&&Sally.Ingest)){ setStatus("Ingestion unavailable"); return; }
-    btn.classList.add("busy"); setStatus(`Reading <b>${file.name}</b>…`);
+    btn.classList.add("busy"); setStatus(`Reading <b>${esc(file.name)}</b>…`);
     try{
-      const doc=await Sally.Ingest.fromPDF(file, {onProgress:p=> setStatus(p.label||"Processing…")});
+      const doc=await Sally.Ingest.fromPDF(file, {onProgress:p=> setStatus(esc(p.label||"Processing…"))});
       addDocNode(doc, true);
-      setStatus(`Added <b>${doc.name}</b> → SDG ${doc.goals.join(", ")} · ${doc.concepts.length} concept${doc.concepts.length>1?"s":""}`);
+      setStatus(`Added <b>${esc(doc.name)}</b> → SDG ${doc.goals.join(", ")} · ${doc.concepts.length} concept${doc.concepts.length>1?"s":""}`);
     }catch(e){ console.error(e); setStatus("⚠️ "+(e.message||"ingestion failed")); }
     btn.classList.remove("busy");
   };
@@ -997,21 +1014,6 @@ try{ if(window.Sally && Sally.store) Sally.store.docs().forEach(d=> addDocNode(d
 window.SallyGraph = Graph;
 window.SallyNodes = byId;
 
-})();
-
-/* sliding glass nav indicator (matches the rest of the product) */
-(function(){
-  const nav=document.getElementById("snav"); if(!nav) return;
-  const pill=document.getElementById("snavpill");
-  const items=[...nav.querySelectorAll("a")];
-  const home=items.find(a=>a.classList.contains("active"))||null;
-  const move=el=>{ if(!el){pill.style.opacity=0;return;} pill.style.opacity=1;
-    pill.style.width=el.offsetWidth+"px"; pill.style.transform=`translateX(${el.offsetLeft-4}px)`; };
-  items.forEach(a=>a.addEventListener("mouseenter",()=>move(a)));
-  nav.addEventListener("mouseleave",()=>move(home));
-  const settle=()=>move(home); settle();
-  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(settle);
-  window.addEventListener("resize",settle); setTimeout(settle,80); setTimeout(settle,400);
 })();
 </script>
 </body>

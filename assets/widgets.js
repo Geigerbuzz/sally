@@ -40,24 +40,25 @@
     },
 
     head(p){
-      return `<div class="w-head"><span class="w-title" title="${p.title||""}">${p.title||""}</span>${
-        p.corner ? `<i class="${p.corner} w-corner"></i>` : ""}</div>`;
+      return `<div class="w-head"><span class="w-title" title="${esc(p.title||"")}">${esc(p.title||"")}</span>${
+        p.corner ? `<i class="${safeIcon(p.corner)} w-corner"></i>` : ""}</div>`;
     },
 
     /* ---- KPI ---- */
     kpi(p){
       const el = this.base(p, ["kpi", p.clickable?"clickable":""]);
       const d = p.data||{};
-      const icon = d.icon ? `<div class="kpi-icon" style="${d.accent?`background:${hexSoft(d.accent)};color:${d.accent}`:""}"><i class="${d.icon}"></i></div>` : "";
+      const ac = safeColor(d.accent);
+      const icon = d.icon ? `<div class="kpi-icon" style="${ac?`background:${hexSoft(d.accent)};color:${ac}`:""}"><i class="${safeIcon(d.icon)}"></i></div>` : "";
       let trend = "";
       if(d.trend){
-        const dir = d.trend.dir||"flat";
+        const dir = ({up:"up",down:"down",flat:"flat"})[d.trend.dir] || "flat";
         const ic = dir==="up"?"ri-arrow-up-line":dir==="down"?"ri-arrow-down-line":"ri-subtract-line";
-        trend = `<span class="kpi-trend ${dir}"><i class="${ic}"></i>${d.trend.val||""}</span>`;
+        trend = `<span class="kpi-trend ${dir}"><i class="${ic}"></i>${esc(d.trend.val||"")}</span>`;
       }
       el.innerHTML = `${icon}
-        <div class="kpi-value">${d.value}${d.unit?`<small>${d.unit}</small>`:""}</div>
-        <div class="kpi-label">${p.title||""}</div>${trend}`;
+        <div class="kpi-value">${esc(d.value)}${d.unit?`<small>${esc(d.unit)}</small>`:""}</div>
+        <div class="kpi-label">${esc(p.title||"")}</div>${trend}`;
       if(p.clickable && p.href) el.onclick = ()=> location.href = p.href;
       return el;
     },
@@ -67,7 +68,7 @@
       const el = this.base(p);
       const cid = "cv-"+Math.random().toString(36).slice(2,9);
       el.innerHTML = `${this.head(p)}<div class="w-canvas"><canvas id="${cid}"></canvas></div>${
-        p.foot?`<div class="w-foot">${p.foot}</div>`:""}`;
+        p.foot?`<div class="w-foot">${(p.footIcon||p.footColor)?`<i class="${safeIcon(p.footIcon)}" style="color:${safeColor(p.footColor)||'currentColor'}"></i> `:""}${esc(p.foot)}</div>`:""}`;
       pending.push(()=>{ const cv=document.getElementById(cid); if(cv) this.buildChart(cv, p); });
       return el;
     },
@@ -112,8 +113,8 @@
           indexAxis: horizontal?"y":"x",
           plugins:{ legend:{ display:(datasets.length>1) } },
           scales:{
-            x:{ grid:{ display:horizontal, color:grid, drawBorder:false }, ticks:{ color:tick, font:{size:10} } },
-            y:{ grid:{ display:!horizontal, color:grid, drawBorder:false }, ticks:{ color:tick, font:{size:10} },
+            x:{ grid:{ display:horizontal, color:grid }, border:{display:false}, ticks:{ color:tick, font:{size:10} } },
+            y:{ grid:{ display:!horizontal, color:grid }, border:{display:false}, ticks:{ color:tick, font:{size:10} },
                 beginAtZero:!horizontal } } } });
     },
 
@@ -174,9 +175,9 @@
       const el = this.base(p);
       const docs = Sally.recentDocs(p.count||5);
       const rows = docs.map(d=>`
-        <div class="wrow" data-code="${d.code}">
-          <span class="dot" style="background:${Sally.sdg(d.goals[0]).color}"></span>
-          <div class="wr-main"><div class="wr-title">${d.name}</div><div class="wr-sub">${d.type} · ${d.date}</div></div>
+        <div class="wrow" data-code="${esc(d.code)}">
+          <span class="dot" style="background:${(Sally.sdg(d.goals&&d.goals[0])||{}).color||'#888'}"></span>
+          <div class="wr-main"><div class="wr-title">${esc(d.name)}</div><div class="wr-sub">${esc(d.type)} · ${esc(d.date)}</div></div>
         </div>`).join("");
       el.innerHTML = `${this.head(p)}<div class="wlist">${rows}</div>`;
       el.querySelectorAll(".wrow").forEach(r=> r.addEventListener("click",e=>{
@@ -212,8 +213,8 @@
       const d = p.data||{};
       el.innerHTML = `${this.head(p)}
         <div class="table-wrap"><table>
-          <thead><tr>${(d.headers||[]).map(h=>`<th>${h}</th>`).join("")}</tr></thead>
-          <tbody>${(d.rows||[]).map(r=>`<tr>${r.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</tbody>
+          <thead><tr>${(d.headers||[]).map(h=>`<th>${esc(h)}</th>`).join("")}</tr></thead>
+          <tbody>${(d.rows||[]).map(r=>`<tr>${(Array.isArray(r)?r:[r]).map(c=>`<td>${esc(c)}</td>`).join("")}</tr>`).join("")}</tbody>
         </table></div>`;
       return el;
     },
@@ -227,6 +228,9 @@
   };
 
   /* helpers */
+  function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+  function safeIcon(s){ return /^ri-[a-z0-9-]+$/.test(s||"") ? s : "ri-bar-chart-2-line"; }
+  function safeColor(s){ return /^(#[0-9a-fA-F]{3,8}|rgba?\([\d.,\s%]+\)|var\(--[a-z0-9-]+\))$/.test(String(s||"").trim()) ? String(s).trim() : ""; }
   function hexSoft(hex, a=0.14){
     if(!hex) return `rgba(10,132,255,${a})`;
     if(hex.startsWith("rgb")) return hex;

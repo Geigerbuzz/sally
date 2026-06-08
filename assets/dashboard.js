@@ -44,7 +44,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
     { id:"w-sdggrid", template:"sdg-grid", dimension:"2x2", title:"The 17 goals · coverage", corner:"ri-grid-line" },
 
     { id:"w-emissions", template:"line-chart", dimension:"2x1", title:"Scope 1–2 emissions (tCO₂e)",
-      foot:`<i class="ri-arrow-down-line" style="color:var(--good)"></i> 27% below 2019 · target net-zero ${m.emissions.targetYear}`,
+      foot:`27% below 2019 · target net-zero ${m.emissions.targetYear}`, footIcon:"ri-arrow-down-line", footColor:"var(--good)",
       data:{ labels:m.emissions.years, datasets:[{ label:"tCO₂e", values:m.emissions.scope12, color:sdg(13) }] } },
 
     { id:"w-energy", template:"donut-chart", dimension:"2x1", title:"Electricity mix",
@@ -151,13 +151,22 @@ document.addEventListener("DOMContentLoaded", ()=>{
       }
       if(!payload) payload = generatePayload(prompt);
       payload.id = payload.id || ("w-gen-"+Date.now());
-      const el=WidgetRenderer.render(payload); grid.appendChild(el); WidgetRenderer.flush();
-      addCustom(payload);
-      genBtn.disabled=false; genBtn.innerHTML=`<i class="ri-sparkling-2-line"></i> Generate`;
-      closeModal(); setTimeout(autoArrange, 60);
-      el.animate?.([{transform:"scale(.9)",opacity:0},{transform:"scale(1)",opacity:1}],{duration:300,easing:"cubic-bezier(.2,.8,.2,1)"});
+      let el;
+      try{
+        el = WidgetRenderer.render(payload); grid.appendChild(el); WidgetRenderer.flush();
+        addCustom(payload);                            // only persist after a successful render
+        el.animate?.([{transform:"scale(.9)",opacity:0},{transform:"scale(1)",opacity:1}],{duration:300,easing:"cubic-bezier(.2,.8,.2,1)"});
+      }catch(e){
+        console.warn("widget render failed, using offline matcher:", e);
+        try{ payload=generatePayload(prompt); payload.id="w-gen-"+Date.now(); el=WidgetRenderer.render(payload); grid.appendChild(el); WidgetRenderer.flush(); addCustom(payload); }catch(_){}
+      }finally{
+        genBtn.disabled=false; genBtn.innerHTML=`<i class="ri-sparkling-2-line"></i> Generate`;
+        closeModal(); setTimeout(autoArrange, 60);
+      }
     }
   }
+
+  const TEMPLATES = new Set(["kpi-card","line-chart","bar-chart","donut-chart","gauge","sdg-grid","gap-list","doc-list","ask-box","data-table"]);
 
   /* ---- DeepSeek-generated widget (grounded in the corpus metrics) ---- */
   async function aiWidget(prompt){
@@ -177,7 +186,7 @@ Allowed shapes:
 When showing SDGs, use the matching sdg[].color hex. Choose the shape that best answers the request.`;
     const usr = `DATA:\n${JSON.stringify(ctx)}\n\nREQUEST: ${prompt}\n\nReturn the widget JSON only.`;
     const payload = await Sally.LLM.json([{role:"system",content:sys},{role:"user",content:usr}], {max_tokens:800});
-    if(!payload || !payload.template) throw new Error("invalid widget payload");
+    if(!payload || !TEMPLATES.has(payload.template)) throw new Error("invalid widget payload");
     return payload;
   }
 
@@ -189,7 +198,7 @@ When showing SDGs, use the matching sdg[].color hex. Choose the shape that best 
 
     if(has("emission","carbon","scope","co2","co₂","footprint"))
       return { id, template:"line-chart", dimension:"2x1", title:"Scope 1–2 emissions (tCO₂e)",
-        foot:`<i class="ri-arrow-down-line" style="color:var(--good)"></i> 27% below 2019 baseline`,
+        foot:`27% below 2019 baseline`, footIcon:"ri-arrow-down-line", footColor:"var(--good)",
         data:{ labels:m.emissions.years, datasets:[{ label:"tCO₂e", values:m.emissions.scope12, color:sdg(13) }] } };
 
     if(has("energy","renewable","solar","electric"))
@@ -198,7 +207,7 @@ When showing SDGs, use the matching sdg[].color hex. Choose the shape that best 
 
     if(has("safety","injury","incident","ehs"))
       return { id, template:"line-chart", dimension:"2x1", title:"Recordable injury rate /200k hrs",
-        foot:`<i class="ri-arrow-down-line" style="color:var(--good)"></i> ${m.safety.dropPct}% lower YoY`,
+        foot:`${m.safety.dropPct}% lower YoY`, footIcon:"ri-arrow-down-line", footColor:"var(--good)",
         data:{ labels:m.safety.years, datasets:[{ label:"Rate", values:m.safety.injuryRate, color:sdg(3) }] } };
 
     if(has("pay","gender","equity","wage","gap "))

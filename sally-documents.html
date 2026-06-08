@@ -154,7 +154,7 @@ function open(code){
     <div class="blk"><h4>Key passage · p.${d.cite.p}</h4><div class="snip">“${d.cite.t}”</div></div>
     <div class="blk"><h4>Concepts</h4><div class="row2">${d.concepts.map(c=>`<span class="chip accent">${c}</span>`).join("")}</div></div>
     <div class="blk"><h4>Advances goals</h4><div class="row2">${d.goals.map(g=>{const s=Sally.sdg(g);return `<div class="sgoal"><i style="background:${s.color}"></i><span class="nm">${s.name}<small>SDG ${g}</small></span></div>`}).join("")}</div></div>`;
-  document.getElementById("dAsk").href="sally-ask.html";
+  document.getElementById("dAsk").href="sally-ask.html?q="+encodeURIComponent("Summarise the "+d.name+" and which SDGs it supports.");
   scrim.classList.add("open"); drawer.classList.add("open");
   history.replaceState(null,"","#"+code);
 }

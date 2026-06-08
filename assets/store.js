@@ -25,7 +25,7 @@ Sally.store = (function(){
     if(!doc || !doc.code) return doc;
     if(!s.docs.find(d=>d.code===doc.code)){
       s.docs.push(doc);
-      (doc.concepts||[]).forEach(c=>{ if(!s.concepts[c]) s.concepts[c] = {goals: doc.goals||[]}; });
+      (doc.concepts||[]).forEach(c=>{ if(!s.concepts[c]) s.concepts[c] = {goals:(doc.goals&&doc.goals.length)?doc.goals:[9]}; });
       save();
       mergeOne(doc);                 // reflect into the live corpus immediately
     }
@@ -33,8 +33,8 @@ Sally.store = (function(){
   }
   function docs(){ return s.docs.slice(); }
   function removeDoc(code){
-    s.docs = s.docs.filter(d=>d.code!==code); save();
-    if(window.Sally && Array.isArray(Sally.DOCS)) Sally.DOCS = Sally.DOCS.filter(d=>d.code!==code);
+    s.docs = s.docs.filter(d=>d.code!==code); merged.delete(code); save();
+    if(window.Sally && Array.isArray(Sally.DOCS)){ const i=Sally.DOCS.findIndex(d=>d.code===code); if(i>=0) Sally.DOCS.splice(i,1); }
   }
 
   /* ---- chat history ---- */
@@ -52,7 +52,7 @@ Sally.store = (function(){
     if(merged.has(d.code)) return;
     merged.add(d.code);
     if(window.Sally && Array.isArray(Sally.DOCS) && !Sally.DOCS.find(x=>x.code===d.code)) Sally.DOCS.push(d);
-    if(window.Sally && Sally.CONCEPTS) (d.concepts||[]).forEach(c=>{ if(!Sally.CONCEPTS[c]) Sally.CONCEPTS[c]={goals:d.goals||[]}; });
+    if(window.Sally && Sally.CONCEPTS) (d.concepts||[]).forEach(c=>{ if(!Sally.CONCEPTS[c]) Sally.CONCEPTS[c]={goals:(d.goals&&d.goals.length)?d.goals:[9]}; });
   }
   function mergeIntoCorpus(){ s.docs.forEach(mergeOne); }
 

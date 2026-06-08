@@ -235,9 +235,9 @@ const pop=document.createElement("div"); pop.className="citepop"; document.body.
 let popTimer=null;
 function showPop(chip, s){
   pop.innerHTML=`<div class="pnm">${escapeHtml(s.name)}</div>
-    <div class="pmeta">${s.code} · p.${s.page} · ${s.type} · ${s.date}</div>
+    <div class="pmeta">${escapeHtml(s.code)} · p.${escapeHtml(s.page)} · ${escapeHtml(s.type)} · ${escapeHtml(s.date)}</div>
     <div class="ptext">“${escapeHtml(s.text)}”</div>
-    <div class="ptrace"><i class="ri-corner-down-right-line"></i> Documents › ${s.code} › p.${s.page}</div>`;
+    <div class="ptrace"><i class="ri-corner-down-right-line"></i> Documents › ${escapeHtml(s.code)} › p.${escapeHtml(s.page)}</div>`;
   pop.classList.add("show");
   const r=chip.getBoundingClientRect(), pw=Math.min(330, window.innerWidth-24);
   pop.style.width=pw+"px";
@@ -258,7 +258,7 @@ function registerSources(sources){
     const card=document.createElement("div"); card.className="srccard"; card.id="src-"+s.num;
     card.innerHTML=`<div class="num">${s.num}</div>
       <div class="nm">${escapeHtml(s.name)}</div>
-      <div class="meta">${s.code} · p.${s.page} · ${s.type} · ${s.date}</div>
+      <div class="meta">${escapeHtml(s.code)} · p.${escapeHtml(s.page)} · ${escapeHtml(s.type)} · ${escapeHtml(s.date)}</div>
       <div class="snip">${escapeHtml(s.text)}</div>
       <div class="pips">${(s.goals||[]).map(g=>`<i title="SDG ${g}" style="background:${(Sally.sdg(g)||{}).color||'#888'}"></i>`).join("")}</div>`;
     card.onclick=()=> location.href="sally-documents.html#"+s.code;
@@ -278,7 +278,7 @@ function flashSource(num){
 function renderRich(text){
   let html=escapeHtml(text);
   html=html.replace(/\*\*([^*]+)\*\*/g,"<strong>$1</strong>");
-  html=html.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g,(m,g)=> g.split(/\s*,\s*/).map(n=>`<span class="cite" data-n="${n}">${n}</span>`).join(""));
+  html=html.replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g,(m,g)=> g.split(/\s*,\s*/).map(n=>`<span class="cite" data-n="${n}">${n}</span>`).join(", "));
   return html.split(/\n{2,}/).map(p=>`<p>${p.replace(/\n/g,"<br>")}</p>`).join("");
 }
 function wireCites(bubble){
@@ -302,6 +302,7 @@ function buildSources(query, k){
 
 /* ---------- AI answer (DeepSeek) ---------- */
 async function answerAI(query){
+  const start=citeSeq;
   const sources=buildSources(query,5);
   const bubble=addSally(); setTyping(bubble);
   const firstNum = sources[0] ? sources[0].num : 1;
@@ -315,6 +316,7 @@ async function answerAI(query){
       { temperature:0.3, onToken:(tok,f)=>{ if(first){ bubble.textContent=""; first=false; } bubble.textContent=f; scrollDown(); } }
     );
   }catch(e){
+    citeSeq=start;                                  // failed turn — don't burn citation numbers
     bubble.innerHTML=`<p>⚠️ ${escapeHtml(e.message)}</p><p class="muted" style="font-size:13px">Open <b>Settings</b> (gear in the dock) to check your key — or clear it to use offline demo mode.</p>`;
     convo.push({role:"sally", text:"(error) "+e.message, sources:[]}); persist(); return;
   }

@@ -49,6 +49,13 @@ Sally.LLM = (function(){
     }
 
     if(opts.onToken){
+      const ct = res.headers.get("content-type") || "";
+      if(!res.body || ct.indexOf("event-stream") < 0){    // not an SSE stream — read as a normal JSON body
+        const j = await res.json().catch(()=>null);
+        const full = j?.choices?.[0]?.message?.content || "";
+        if(full) opts.onToken(full, full);
+        return full;
+      }
       const reader = res.body.getReader(), dec = new TextDecoder();
       let buf="", full="";
       while(true){
@@ -78,9 +85,11 @@ Sally.LLM = (function(){
   /* convenience: ask for and parse a JSON object */
   async function json(messages, opts={}){
     const txt = await chat(messages, Object.assign({json:true, temperature:0.2}, opts));
-    // be forgiving: pull the first {...} block if the model wrapped it
-    const m = txt.match(/\{[\s\S]*\}/);
-    return JSON.parse(m ? m[0] : txt);
+    const m = (txt||"").match(/[\[{][\s\S]*[\]}]/);     // first object OR array block
+    const raw = (m ? m[0] : (txt||"")).trim();
+    if(!raw) throw new Error("Empty JSON response from model");
+    try{ return JSON.parse(raw); }
+    catch(e){ throw new Error("Model did not return valid JSON: " + raw.slice(0,120)); }
   }
 
   async function test(){
