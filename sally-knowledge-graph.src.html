@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sally — Knowledge Graph</title>
+<style>
+/* ===== Embedded fonts (base64 woff2, fully offline) ===== */
+/*__FONTS_CSS__*/
+
+/* ===== Design tokens (shared with the SDG compliance dashboard) ===== */
+:root{
+  --ink:#0a0c10;          /* dark ink background            */
+  --ink-2:#0d1016;
+  --ink-3:#11151d;
+  --panel:rgba(16,19,26,0.94);
+  --panel-2:rgba(22,26,34,0.92);
+  --line:rgba(255,255,255,0.08);
+  --line-2:rgba(255,255,255,0.14);
+  --text:#eceef2;
+  --muted:#9aa1ac;
+  --faint:#5d646f;
+  --faint-2:#3a4049;
+  --display:'Bricolage Grotesque', ui-sans-serif, system-ui, sans-serif;
+  --body:'Hanken Grotesk', ui-sans-serif, system-ui, sans-serif;
+  --mono:'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  --doc:#dfe3ea;          /* near-white documents */
+  --concept:#7e8693;      /* muted grey concepts  */
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:var(--ink);
+  color:var(--text);
+  font-family:var(--body);
+  overflow:hidden;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* faint grid + vignette backdrop (chrome, behind the graph) */
+#backdrop{
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+  background:
+    radial-gradient(120% 120% at 50% 38%, rgba(255,255,255,0.015) 0%, rgba(0,0,0,0) 42%),
+    linear-gradient(rgba(255,255,255,0.018) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.018) 1px, transparent 1px),
+    radial-gradient(140% 110% at 50% 45%, var(--ink-2) 0%, var(--ink) 60%, #060709 100%);
+  background-size:auto, 44px 44px, 44px 44px, auto;
+}
+#vignette{
+  position:fixed; inset:0; z-index:3; pointer-events:none;
+  box-shadow: inset 0 0 240px 60px rgba(0,0,0,0.72);
+  background:radial-gradient(120% 120% at 50% 50%, rgba(0,0,0,0) 55%, rgba(0,0,0,0.5) 100%);
+}
+
+#graph{position:fixed; inset:0; z-index:1}
+canvas{display:block}
+
+/* ===== Top chrome bar ===== */
+#topbar{
+  position:fixed; z-index:5; top:0; left:0; right:0;
+  display:flex; align-items:center; gap:18px;
+  padding:14px 22px;
+  background:linear-gradient(180deg, rgba(8,10,14,0.92) 0%, rgba(8,10,14,0.55) 70%, rgba(8,10,14,0) 100%);
+  pointer-events:none;
+}
+#topbar > *{pointer-events:auto}
+.brand{display:flex; align-items:baseline; gap:10px; user-select:none}
+.brand .logo{
+  font-family:var(--display); font-weight:800; font-size:20px; letter-spacing:-0.02em;
+  color:var(--text);
+}
+.brand .dot{width:7px;height:7px;border-radius:50%;background:var(--text);opacity:.5;align-self:center}
+.brand .sub{font-family:var(--mono); font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--faint)}
+
+/* nav */
+nav{display:flex; gap:4px; margin-left:6px}
+nav a{
+  font-family:var(--mono); font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+  color:var(--faint); text-decoration:none; padding:7px 11px; border-radius:7px;
+  border:1px solid transparent; transition:.18s;
+}
+nav a:hover{color:var(--muted); background:rgba(255,255,255,0.03)}
+nav a.active{color:var(--text); border-color:var(--line-2); background:rgba(255,255,255,0.04)}
+
+.spacer{flex:1}
+
+/* search */
+.search{position:relative; display:flex; align-items:center}
+.search svg{position:absolute; left:11px; width:13px; height:13px; stroke:var(--faint); pointer-events:none}
+#search{
+  font-family:var(--mono); font-size:12px; color:var(--text);
+  background:var(--ink-3); border:1px solid var(--line); border-radius:9px;
+  padding:9px 12px 9px 31px; width:228px; outline:none; transition:.18s;
+}
+#search::placeholder{color:var(--faint); letter-spacing:.04em}
+#search:focus{border-color:var(--line-2); background:#13171f; width:264px}
+
+/* segmented type filters */
+.filters{display:flex; gap:2px; padding:3px; background:var(--ink-3); border:1px solid var(--line); border-radius:10px}
+.filters button{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--faint); background:transparent; border:0; cursor:pointer;
+  padding:7px 12px; border-radius:7px; transition:.16s; display:flex; align-items:center; gap:7px;
+}
+.filters button:hover{color:var(--muted)}
+.filters button.on{color:var(--text); background:rgba(255,255,255,0.06)}
+.filters button .pip{width:8px;height:8px;border-radius:50%;border:1.5px solid currentColor;transition:.16s}
+.filters button.on[data-type="goal"] .pip{background:currentColor}
+.filters button.on .pip{background:currentColor}
+.filters button:not(.on) .pip{opacity:.5}
+
+/* generic chrome button */
+.btn{
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  color:var(--muted); background:var(--ink-3); border:1px solid var(--line);
+  border-radius:9px; padding:9px 13px; cursor:pointer; transition:.16s;
+  display:flex; align-items:center; gap:8px;
+}
+.btn:hover{color:var(--text); border-color:var(--line-2); background:#14181f}
+.btn:active{transform:translateY(1px)}
+.btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.7}
+
+/* ===== Legend (bottom-left) ===== */
+#legend{
+  position:fixed; z-index:5; left:22px; bottom:20px;
+  background:var(--panel); border:1px solid var(--line); border-radius:12px;
+  padding:13px 15px; backdrop-filter:blur(10px);
+}
+#legend .ttl{font-family:var(--mono); font-size:9.5px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); margin-bottom:10px}
+#legend .row{display:flex; align-items:center; gap:10px; margin:7px 0; font-family:var(--mono); font-size:11px; color:var(--muted)}
+#legend .g-swatch{width:13px;height:13px;border-radius:50%;
+  background:conic-gradient(#FCC30B,#3F7E44,#00689D,#E5243B,#FF3A21,#26BDE2,#FCC30B);
+  box-shadow:0 0 8px rgba(255,255,255,.18)}
+#legend .c-swatch{width:11px;height:11px;border-radius:50%;background:var(--concept)}
+#legend .d-swatch{width:10px;height:10px;border-radius:50%;background:transparent;border:1.5px solid var(--doc)}
+#legend .hint{margin-top:11px; padding-top:10px; border-top:1px solid var(--line);
+  font-family:var(--mono); font-size:9.5px; color:var(--faint-2); line-height:1.7; letter-spacing:.03em}
+
+/* ===== Detail panel (slide-in, right) ===== */
+#panel{
+  position:fixed; z-index:6; top:0; right:0; height:100%; width:380px; max-width:88vw;
+  background:var(--panel); border-left:1px solid var(--line);
+  backdrop-filter:blur(16px);
+  transform:translateX(105%); transition:transform .42s cubic-bezier(.22,.61,.36,1);
+  display:flex; flex-direction:column; box-shadow:-30px 0 80px rgba(0,0,0,.5);
+}
+#panel.open{transform:translateX(0)}
+#panel .phead{padding:26px 26px 20px; border-bottom:1px solid var(--line); position:relative}
+#panel .ptype{font-family:var(--mono); font-size:10px; letter-spacing:.2em; text-transform:uppercase; color:var(--faint); display:flex; align-items:center; gap:9px}
+#panel .ptype .swatch{width:10px;height:10px;border-radius:50%}
+#panel .pcode{font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:14px; letter-spacing:.04em}
+#panel .ptitle{font-family:var(--display); font-weight:700; font-size:25px; line-height:1.16; letter-spacing:-0.02em; margin-top:7px; color:var(--text)}
+#panel .pclose{position:absolute; top:22px; right:22px; width:30px;height:30px; border-radius:8px;
+  display:flex;align-items:center;justify-content:center; cursor:pointer; color:var(--faint);
+  background:rgba(255,255,255,0.03); border:1px solid var(--line); transition:.16s}
+#panel .pclose:hover{color:var(--text); border-color:var(--line-2)}
+#panel .pbody{padding:8px 26px 26px; overflow-y:auto; flex:1}
+#panel .pbody::-webkit-scrollbar{width:8px}
+#panel .pbody::-webkit-scrollbar-thumb{background:rgba(255,255,255,.08); border-radius:4px}
+#panel .group{margin-top:24px}
+#panel .group h4{font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
+  color:var(--faint); margin:0 0 12px; display:flex; align-items:center; gap:8px}
+#panel .group h4 .count{color:var(--faint-2)}
+#panel .item{
+  display:flex; align-items:center; gap:11px; padding:10px 12px; margin:5px 0;
+  background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:9px;
+  cursor:pointer; transition:.15s;
+}
+#panel .item:hover{background:rgba(255,255,255,0.05); border-color:var(--line-2); transform:translateX(2px)}
+#panel .item .ic{width:11px;height:11px;border-radius:50%;flex:none}
+#panel .item .ic.ring{background:transparent;border:1.5px solid var(--doc)}
+#panel .item .nm{font-family:var(--body); font-size:13.5px; color:var(--text); line-height:1.3}
+#panel .item .meta{font-family:var(--mono); font-size:10px; color:var(--faint); margin-left:auto; flex:none}
+#panel .pfoot{padding:16px 26px; border-top:1px solid var(--line)}
+#panel .isolate-note{font-family:var(--mono); font-size:10.5px; color:var(--faint); line-height:1.6; letter-spacing:.02em}
+
+/* status / hint pill bottom-center */
+#status{
+  position:fixed; z-index:5; left:50%; bottom:22px; transform:translateX(-50%);
+  font-family:var(--mono); font-size:10.5px; letter-spacing:.06em; color:var(--faint);
+  background:rgba(10,12,16,0.7); border:1px solid var(--line); border-radius:999px;
+  padding:8px 16px; backdrop-filter:blur(8px); transition:opacity .3s; pointer-events:none;
+  white-space:nowrap;
+}
+#status b{color:var(--muted); font-weight:500}
+
+@media (max-width:720px){
+  nav,.brand .sub{display:none}
+  #search{width:150px}
+  #search:focus{width:180px}
+}
+</style>
+</head>
+<body>
+<div id="backdrop"></div>
+<div id="graph"></div>
+<div id="vignette"></div>
+
+<!-- ===== Top chrome ===== -->
+<header id="topbar">
+  <div class="brand">
+    <span class="logo">Sally</span>
+    <span class="dot"></span>
+    <span class="sub">Knowledge Graph</span>
+  </div>
+  <nav>
+    <a href="sally-documents.html">Documents</a>
+    <a href="sally-ask.html">Ask Sally</a>
+    <a href="sally-sdg-compliance.html">Compliance</a>
+    <a href="sally-knowledge-graph.html" class="active">Graph</a>
+  </nav>
+
+  <div class="spacer"></div>
+
+  <div class="search">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+    <input id="search" type="text" placeholder="Search the graph…" autocomplete="off" spellcheck="false">
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="on" data-type="goal"><span class="pip"></span>Goals</button>
+    <button class="on" data-type="concept"><span class="pip"></span>Concepts</button>
+    <button class="on" data-type="document"><span class="pip"></span>Docs</button>
+  </div>
+
+  <button class="btn" id="replay" title="Re-run the layout">
+    <svg viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></svg>
+    Replay
+  </button>
+</header>
+
+<!-- ===== Legend ===== -->
+<div id="legend">
+  <div class="ttl">Legend</div>
+  <div class="row"><span class="g-swatch"></span> SDG goal — hub</div>
+  <div class="row"><span class="c-swatch"></span> Concept — topic</div>
+  <div class="row"><span class="d-swatch"></span> Document — source</div>
+  <div class="hint">click an sdg → spotlight evidence<br>hover → trace neighbors · drag · scroll-zoom<br>double-click empty → fit all</div>
+</div>
+
+<!-- ===== Detail panel ===== -->
+<aside id="panel">
+  <div class="phead">
+    <div class="pclose" id="pclose"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></div>
+    <div class="ptype" id="ptype"></div>
+    <div class="ptitle" id="ptitle"></div>
+    <div class="pcode" id="pcode"></div>
+  </div>
+  <div class="pbody" id="pbody"></div>
+  <div class="pfoot" id="pfoot"></div>
+</aside>
+
+<div id="status"></div>
+
+<!-- ===== Vendored force-graph (UMD, inlined for offline) ===== -->
+<script>/*__FORCE_GRAPH_JS__*/</script>
+
+<!-- ===== Graph application ===== -->
+<script>
+"use strict";
+(function(){
+
+/* ---------------------------------------------------------------------------
+   1. SEED DATA  — official SDG colours, the document corpus & its citations,
+      concepts, and all edge wiring. Shared corpus with the compliance view.
+--------------------------------------------------------------------------- */
+const SDG = [
+  {n:1,  name:"No Poverty",                         color:"#E5243B"},
+  {n:2,  name:"Zero Hunger",                        color:"#DDA63A"},
+  {n:3,  name:"Good Health & Well-being",           color:"#4C9F38"},
+  {n:4,  name:"Quality Education",                  color:"#C5192D"},
+  {n:5,  name:"Gender Equality",                    color:"#FF3A21"},
+  {n:6,  name:"Clean Water & Sanitation",           color:"#26BDE2"},
+  {n:7,  name:"Affordable & Clean Energy",          color:"#FCC30B"},
+  {n:8,  name:"Decent Work & Economic Growth",      color:"#A21942"},
+  {n:9,  name:"Industry, Innovation & Infrastructure", color:"#FD6925"},
+  {n:10, name:"Reduced Inequalities",               color:"#DD1367"},
+  {n:11, name:"Sustainable Cities & Communities",   color:"#FD9D24"},
+  {n:12, name:"Responsible Consumption & Production",color:"#BF8B2E"},
+  {n:13, name:"Climate Action",                     color:"#3F7E44"},
+  {n:14, name:"Life Below Water",                   color:"#0A97D9"},
+  {n:15, name:"Life on Land",                       color:"#56C02B"},
+  {n:16, name:"Peace, Justice & Strong Institutions",color:"#00689D"},
+  {n:17, name:"Partnerships for the Goals",         color:"#19486A"},
+];
+
+// concept -> goals it advances
+const CONCEPTS = {
+  "Renewable Energy":          {goals:[7,13]},
+  "Energy Efficiency":         {goals:[7,12]},
+  "Emissions":                 {goals:[13]},
+  "Net-Zero":                  {goals:[13,7]},
+  "Waste Reduction":           {goals:[12]},
+  "Circular Economy":          {goals:[12,15]},
+  "Workforce Wellbeing":       {goals:[3,8]},
+  "Workplace Safety":          {goals:[3,8]},
+  "Training & Apprenticeships":{goals:[4,8]},
+  "Diversity & Inclusion":     {goals:[5,10]},
+  "Pay Equity":                {goals:[5,10]},
+  "Governance & Ethics":       {goals:[16]},
+  "Anti-Corruption":           {goals:[16]},
+  "R&D / Innovation":          {goals:[9]},
+  "Manufacturing Efficiency":  {goals:[9,12]},
+  "University Partnerships":   {goals:[17,4]},
+  "Supply Chain":              {goals:[12,8]},
+};
+
+// documents -> goals they are cited as evidence for (from the dashboard) + tagged concepts
+const DOCS = [
+  {name:"EHS Annual Review 2024",      code:"EHS-2024",      goals:[3,8],    concepts:["Workplace Safety","Workforce Wellbeing"]},
+  {name:"HR Benefits Policy",          code:"HR-BEN",        goals:[3,8],    concepts:["Workforce Wellbeing"]},
+  {name:"L&D Report 2024",             code:"LND-2024",      goals:[4,8],    concepts:["Training & Apprenticeships"]},
+  {name:"Talent Strategy 2024",        code:"TAL-2024",      goals:[8,4],    concepts:["Training & Apprenticeships","Diversity & Inclusion"]},
+  {name:"Diversity Dashboard 2024",    code:"DIV-2024",      goals:[5,10],   concepts:["Diversity & Inclusion"]},
+  {name:"Pay Equity Audit 2024",       code:"PEA-2024",      goals:[5,10,8], concepts:["Pay Equity","Diversity & Inclusion"]},
+  {name:"Energy Transition Report 2024",code:"ENT-2024",     goals:[7,13],   concepts:["Renewable Energy","Energy Efficiency"]},
+  {name:"Procurement Memo EN-2024-118",code:"EN-2024-118",   goals:[12,8],   concepts:["Supply Chain"]},
+  {name:"Facilities Report",           code:"FAC-2024",      goals:[7,12],   concepts:["Energy Efficiency","Manufacturing Efficiency"]},
+  {name:"HR Policy Manual",            code:"HR-MAN",        goals:[8,5],    concepts:["Workforce Wellbeing","Diversity & Inclusion"]},
+  {name:"People Report 2024",          code:"PPL-2024",      goals:[8,5,4],  concepts:["Workforce Wellbeing","Diversity & Inclusion"]},
+  {name:"Compensation Policy 2024",    code:"COMP-2024",     goals:[8,10],   concepts:["Pay Equity"]},
+  {name:"Annual Report 2024",          code:"AR-2024",       goals:[8,9],    concepts:["Governance & Ethics","R&D / Innovation"]},
+  {name:"Operations Review",           code:"OPS-2024",      goals:[9,12],   concepts:["Manufacturing Efficiency","Supply Chain"]},
+  {name:"Governance Charter",          code:"GOV-CHTR",      goals:[16],     concepts:["Governance & Ethics"]},
+  {name:"Sustainability Report 2024",  code:"SUS-2024",      goals:[12,13,7],concepts:["Emissions","Circular Economy","Net-Zero"]},
+  {name:"Circularity Brief",           code:"CIR-2024",      goals:[12],     concepts:["Circular Economy","Waste Reduction"]},
+  {name:"Carbon Report 2024",          code:"CRB-2024",      goals:[13],     concepts:["Emissions","Net-Zero"]},
+  {name:"Climate Strategy",            code:"CLM-STRAT",     goals:[13,7],   concepts:["Net-Zero","Renewable Energy"]},
+  {name:"Code of Conduct 2024",        code:"COC-2024",      goals:[16],     concepts:["Governance & Ethics","Anti-Corruption"]},
+  {name:"Compliance Log 2024",         code:"CPL-2024",      goals:[16],     concepts:["Anti-Corruption","Governance & Ethics"]},
+  {name:"Partnerships Register 2024",  code:"PTR-2024",      goals:[17],     concepts:["University Partnerships"]},
+  {name:"Membership Record",           code:"MEM-REC",       goals:[17],     concepts:["University Partnerships"]},
+];
+
+// a few related-topic concept<->concept links
+const CONCEPT_LINKS = [
+  ["Renewable Energy","Net-Zero"],
+  ["Renewable Energy","Energy Efficiency"],
+  ["Emissions","Net-Zero"],
+  ["Circular Economy","Waste Reduction"],
+  ["Workforce Wellbeing","Workplace Safety"],
+  ["Diversity & Inclusion","Pay Equity"],
+  ["Governance & Ethics","Anti-Corruption"],
+  ["R&D / Innovation","University Partnerships"],
+  ["Manufacturing Efficiency","Supply Chain"],
+];
+
+// real SDG interlinkages
+const GOAL_LINKS = [[7,13],[12,13],[12,15],[4,8],[9,12],[16,17]];
+
+/* ---- build nodes & links ---- */
+const slug = s => s.toLowerCase().replace(/[^a-z0-9]+/g,"-").replace(/(^-|-$)/g,"");
+const nodes = [], links = [];
+const byId = {};
+function addNode(n){ byId[n.id]=n; nodes.push(n); return n; }
+
+SDG.forEach(g => addNode({id:"g"+g.n, type:"goal", num:g.n, label:"SDG "+g.n, name:g.name, color:g.color}));
+Object.keys(CONCEPTS).forEach(c => addNode({id:"c-"+slug(c), type:"concept", label:c, name:c}));
+DOCS.forEach(d => addNode({id:"d-"+slug(d.name), type:"document", label:d.name, name:d.name, code:d.code}));
+
+const linkKey = new Set();
+function addLink(s,t,kind){
+  const k = s<t ? s+"|"+t : t+"|"+s;
+  if(linkKey.has(k)) return; linkKey.add(k);
+  links.push({source:s, target:t, kind});
+}
+// document -> goal (citations)  &  document -> concept
+DOCS.forEach(d=>{
+  const did="d-"+slug(d.name);
+  d.goals.forEach(g=> addLink(did,"g"+g,"doc-goal"));
+  d.concepts.forEach(c=> addLink(did,"c-"+slug(c),"doc-concept"));
+});
+// concept -> goal
+Object.keys(CONCEPTS).forEach(c=>{
+  const cid="c-"+slug(c);
+  CONCEPTS[c].goals.forEach(g=> addLink(cid,"g"+g,"concept-goal"));
+});
+// concept <-> concept
+CONCEPT_LINKS.forEach(([a,b])=> addLink("c-"+slug(a),"c-"+slug(b),"concept-concept"));
+// goal <-> goal
+GOAL_LINKS.forEach(([a,b])=> addLink("g"+a,"g"+b,"goal-goal"));
+
+/* degree-based sizing + adjacency (computed over the full corpus) */
+nodes.forEach(n=>{ n.deg=0; });
+links.forEach(l=>{ byId[l.source].deg++; byId[l.target].deg++; });
+const RING = {goal:7.5, concept:4.2, document:3.0};
+nodes.forEach(n=>{
+  n.r = RING[n.type] + Math.sqrt(n.deg) * (n.type==="goal"?2.6:1.4);
+  // entrance bloom: start clustered near the centre
+  n.x = (Math.random()-0.5)*36;
+  n.y = (Math.random()-0.5)*36;
+  n._ph = Math.random()*Math.PI*2;          // drift phase
+  n._amp = 1.4 + Math.random()*1.8;         // drift amplitude
+});
+
+/* ---------------------------------------------------------------------------
+   2. GRAPH INSTANCE
+--------------------------------------------------------------------------- */
+const el = document.getElementById("graph");
+const Graph = ForceGraph()(el)
+  .backgroundColor("rgba(0,0,0,0)")
+  .nodeRelSize(1)
+  .nodeId("id")
+  .linkSource("source").linkTarget("target")
+  .cooldownTicks(Infinity)        // keep rendering; we manage rest/drift ourselves
+  .d3VelocityDecay(0.32)
+  .warmupTicks(0);
+
+Graph.d3Force("charge").strength(-200).distanceMax(560);
+Graph.d3Force("center").strength(0.05);
+// gentle containment so unlinked goals (no evidence) don't drift off-screen
+Graph.d3Force("contain", (alpha)=>{
+  const k = 0.020 * alpha;
+  for(const n of nodes){
+    if(n===dragNode || n.fx!=null) continue;
+    n.vx -= n.x * k;
+    n.vy -= n.y * k;
+  }
+});
+Graph.d3Force("link")
+  .distance(l=>{
+    const k=l.kind;
+    if(k==="goal-goal") return 150;
+    if(k==="concept-goal") return 64;
+    if(k==="doc-goal") return 78;
+    if(k==="doc-concept") return 34;
+    return 48; // concept-concept
+  })
+  .strength(l=> l.kind==="doc-concept"?0.5:0.18);
+
+/* adjacency over the *visible* graph, rebuilt whenever data changes */
+function buildAdjacency(ns, ls){
+  ns.forEach(n=>{ n.neighbors=new Set(); n.adj=new Set(); });
+  ls.forEach(l=>{
+    const s=(typeof l.source==="object")?l.source:byId[l.source];
+    const t=(typeof l.target==="object")?l.target:byId[l.target];
+    if(!s||!t) return;
+    s.neighbors.add(t); t.neighbors.add(s);
+    s.adj.add(l); t.adj.add(l);
+  });
+}
+
+/* ---------------------------------------------------------------------------
+   3. STATE  — filtering, hover-focus, selection, search isolation
+--------------------------------------------------------------------------- */
+const visibleType = {goal:true, concept:true, document:true};
+let hoverNode=null, selNode=null, dragNode=null;
+let isolateSet=null;                 // Set of node ids when an SDG is spotlighted
+let searchMatches=null;              // Set of node ids matching search
+const hiNodes=new Set(), hiLinks=new Set();
+
+function recomputeHighlight(){
+  hiNodes.clear(); hiLinks.clear();
+  const focus = hoverNode || selNode;
+  if(focus && focus.neighbors){
+    hiNodes.add(focus);
+    focus.neighbors.forEach(nb=> hiNodes.add(nb));
+    focus.adj.forEach(l=> hiLinks.add(l));
+  }
+}
+
+function applyData(){
+  const ns = nodes.filter(n=> visibleType[n.type]);
+  const okId = new Set(ns.map(n=>n.id));
+  const ls = links.filter(l=>{
+    const s=(typeof l.source==="object")?l.source.id:l.source;
+    const t=(typeof l.target==="object")?l.target.id:l.target;
+    return okId.has(s)&&okId.has(t);
+  });
+  Graph.graphData({nodes:ns, links:ls});
+  buildAdjacency(ns, ls);
+  recomputeHighlight();
+}
+
+/* dim level for a node given all active modes (0 = hidden-ish, 1 = full) */
+function nodeAlpha(n){
+  if(isolateSet)  return isolateSet.has(n.id) ? 1 : 0.06;
+  if(searchMatches) return searchMatches.has(n.id) ? 1 : 0.08;
+  if(hoverNode||selNode) return hiNodes.has(n) ? 1 : 0.10;
+  return 1;
+}
+function linkAlphaMul(l){
+  if(isolateSet)  return (isolateSet.has(srcId(l))&&isolateSet.has(tgtId(l)))?1:0.04;
+  if(searchMatches) return 0.05;
+  if(hoverNode||selNode) return hiLinks.has(l)?1:0.05;
+  return 1;
+}
+const srcId = l => (typeof l.source==="object")?l.source.id:l.source;
+const tgtId = l => (typeof l.target==="object")?l.target.id:l.target;
+
+/* ---------------------------------------------------------------------------
+   4. RENDERING — custom nodes (glow + conditional label) and links
+--------------------------------------------------------------------------- */
+function hexA(hex,a){
+  const x=hex.replace("#","");
+  const r=parseInt(x.substr(0,2),16),g=parseInt(x.substr(2,2),16),b=parseInt(x.substr(4,2),16);
+  return `rgba(${r},${g},${b},${a})`;
+}
+
+Graph.nodeCanvasObject((n, ctx, scale)=>{
+  const a = nodeAlpha(n);
+  const focused = (hoverNode===n)||(selNode===n)||(searchMatches&&searchMatches.has(n.id));
+  const r = n.r;
+  ctx.save();
+  ctx.globalAlpha = a;
+
+  if(n.type==="goal"){
+    // soft outer glow in the SDG colour
+    const glow = ctx.createRadialGradient(n.x,n.y,r*0.4, n.x,n.y, r*(focused?3.4:2.6));
+    glow.addColorStop(0, hexA(n.color, focused?0.55:0.34));
+    glow.addColorStop(1, hexA(n.color, 0));
+    ctx.fillStyle=glow;
+    ctx.beginPath(); ctx.arc(n.x,n.y, r*(focused?3.4:2.6), 0, 2*Math.PI); ctx.fill();
+    // body
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,2*Math.PI);
+    ctx.fillStyle=n.color; ctx.fill();
+    ctx.lineWidth=1.4/scale; ctx.strokeStyle=hexA("#ffffff",0.18); ctx.stroke();
+  } else if(n.type==="concept"){
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,2*Math.PI);
+    ctx.fillStyle = focused ? "#aab2bf" : "#6f7783";
+    ctx.fill();
+    ctx.lineWidth=1/scale; ctx.strokeStyle=hexA("#ffffff",0.08); ctx.stroke();
+  } else { // document — light ring
+    ctx.beginPath(); ctx.arc(n.x,n.y,r,0,2*Math.PI);
+    ctx.fillStyle = hexA("#dfe3ea", focused?0.95:0.14);
+    ctx.fill();
+    ctx.lineWidth=1.4/scale; ctx.strokeStyle=hexA("#dfe3ea", focused?1:0.7); ctx.stroke();
+  }
+
+  // ----- labels (mono) -----
+  // goal labels always on; concept/doc fade in on zoom-in or when focused/highlighted
+  let show=0;
+  if(n.type==="goal") show=1;
+  else {
+    const onByZoom = n.type==="concept"
+      ? Math.max(0, Math.min(1,(scale-1.15)/0.9))
+      : Math.max(0, Math.min(1,(scale-2.0)/1.2));
+    const onByFocus = (focused || hiNodes.has(n)) ? 1 : 0;
+    show = Math.max(onByZoom, onByFocus);
+  }
+  if(show>0.02){
+    const px = (n.type==="goal"?11:10);
+    ctx.font = `${n.type==="goal"?600:500} ${px/scale}px 'IBM Plex Mono', monospace`;
+    ctx.textAlign="center"; ctx.textBaseline="top";
+    const label = n.label;
+    const ly = n.y + r + 4/scale;
+    ctx.globalAlpha = a*show;
+    // legibility halo
+    ctx.lineWidth = 3/scale; ctx.strokeStyle="rgba(6,8,11,0.92)";
+    ctx.lineJoin="round";
+    ctx.strokeText(label, n.x, ly);
+    ctx.fillStyle = n.type==="goal" ? "rgba(245,247,250,0.96)" : "rgba(200,206,214,0.92)";
+    ctx.fillText(label, n.x, ly);
+    // goal: second line with the SDG name when zoomed in or focused
+    if(n.type==="goal" && (scale>1.25 || focused)){
+      const np=8.5/scale;
+      ctx.font=`400 ${np}px 'IBM Plex Mono', monospace`;
+      ctx.globalAlpha = a*Math.max(focused?1:0, Math.min(1,(scale-1.25)/0.7));
+      if(ctx.globalAlpha>0.03){
+        ctx.lineWidth=3/scale; ctx.strokeStyle="rgba(6,8,11,0.9)";
+        const ny=ly+ (px/scale) + 2/scale;
+        ctx.strokeText(n.name, n.x, ny);
+        ctx.fillStyle=hexA(n.color,0.92);
+        ctx.fillText(n.name, n.x, ny);
+      }
+    }
+  }
+  ctx.restore();
+});
+
+Graph.nodePointerAreaPaint((n, color, ctx)=>{
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.arc(n.x,n.y, n.r+2, 0, 2*Math.PI); ctx.fill();
+});
+
+Graph.linkColor(l=>{
+  const m = linkAlphaMul(l);
+  const hot = hiLinks.has(l) || (isolateSet && isolateSet.has(srcId(l)) && isolateSet.has(tgtId(l)));
+  // tint links touching a goal toward that goal's colour when hot
+  if(hot){
+    const s=byId[srcId(l)], t=byId[tgtId(l)];
+    const g = (s&&s.type==="goal")?s : (t&&t.type==="goal")?t : null;
+    if(g) return hexA(g.color, 0.55*m);
+    return hexA("#cfd4dc", 0.5*m);
+  }
+  return hexA("#ffffff", 0.07*m);
+});
+Graph.linkWidth(l=>{
+  const hot = hiLinks.has(l) || (isolateSet && isolateSet.has(srcId(l)) && isolateSet.has(tgtId(l)));
+  return hot ? 1.6 : 0.6;
+});
+Graph.linkDirectionalParticles(0);
+
+/* ---------------------------------------------------------------------------
+   5. GENTLE DRIFT — "alive at rest". Capture settled positions on engine stop,
+      then orbit each node by a tiny amount every frame.
+--------------------------------------------------------------------------- */
+let driftOn=false, settled=false, warm=0;
+const SETTLE_TICKS=150;
+
+function freezeIntoDrift(doFit){
+  nodes.forEach(n=>{ n._bx=n.x; n._by=n.y; });
+  driftOn=true;
+  Graph.cooldownTicks(0);            // halt the d3 sim; gentle drift takes over
+  if(doFit && !settled){
+    settled=true;
+    Graph.zoomToFit(900,90);
+    setStatus("Click an SDG to spotlight its evidence.");
+  }
+}
+
+// the sim runs with cooldownTicks=Infinity; we settle it ourselves after a warm period
+Graph.onEngineTick(()=>{
+  driftOn=false;                     // d3 owns positions while ticking
+  if(++warm >= SETTLE_TICKS) freezeIntoDrift(true);
+});
+Graph.onEngineStop(()=> freezeIntoDrift(true));
+
+// gentle continuous drift around each node's settled position → "alive at rest"
+Graph.onRenderFramePre((ctx, scale)=>{
+  if(!driftOn) return;
+  const t = performance.now()/1000;
+  for(const n of nodes){
+    if(n===dragNode || n.fx!=null || n._bx==null) continue;
+    n.x = n._bx + Math.sin(t*0.42 + n._ph) * n._amp;
+    n.y = n._by + Math.cos(t*0.37 + n._ph*1.3) * n._amp;
+  }
+});
+
+/* ---------------------------------------------------------------------------
+   6. INTERACTIONS
+--------------------------------------------------------------------------- */
+Graph.onNodeHover(n=>{
+  hoverNode = n || null;
+  el.style.cursor = n ? "pointer" : "default";
+  recomputeHighlight();
+});
+Graph.onNodeDrag(n=>{
+  dragNode=n; driftOn=false;
+  if(settled){ warm=0; Graph.cooldownTicks(Infinity); }  // let neighbours relax while dragging
+});
+Graph.onNodeDragEnd(n=>{
+  dragNode=null; n.fx=undefined; n.fy=undefined;          // release back into gentle drift
+  n._bx=n.x; n._by=n.y;
+});
+
+Graph.onNodeClick(n=>{
+  selNode = n;
+  recomputeHighlight();
+  openPanel(n);
+  if(n.type==="goal"){
+    spotlightGoal(n);
+  } else {
+    isolateSet=null;
+    // gently centre on the clicked node
+    Graph.centerAt(n.x, n.y, 600);
+  }
+});
+
+Graph.onBackgroundClick(()=>{ clearFocus(); });
+
+// double-click empty space → zoom to fit all
+let lastBg=0;
+el.addEventListener("dblclick", e=>{
+  // only when not on a node (force-graph swallows node dblclick differently);
+  Graph.zoomToFit(700, 90);
+});
+
+function spotlightGoal(g){
+  // entire supporting subgraph: the goal, concepts that advance it, documents
+  // that cite it, documents tagged with those concepts, and linked sibling goals.
+  const set=new Set([g.id]);
+  g.neighbors.forEach(nb=>{
+    set.add(nb.id);
+    if(nb.type==="concept"){
+      nb.neighbors.forEach(d=>{ if(d.type==="document") set.add(d.id); });
+    }
+  });
+  isolateSet=set;
+  searchMatches=null;
+  setStatus(`Spotlight — <b>SDG ${g.num}: ${g.name}</b> · ${set.size-1} supporting nodes`);
+  // zoom to fit just the cluster
+  setTimeout(()=> Graph.zoomToFit(800, 110, nd=> set.has(nd.id)), 60);
+}
+
+function clearFocus(){
+  const wasIsolated = !!isolateSet;
+  selNode=null; isolateSet=null; searchMatches=null;
+  searchEl.value="";
+  closePanel();
+  recomputeHighlight();
+  if(wasIsolated) Graph.zoomToFit(700,90);   // smooth "back" from the spotlight
+  setStatus("Click an SDG to spotlight its evidence.");
+}
+
+/* ---------------------------------------------------------------------------
+   7. DETAIL PANEL
+--------------------------------------------------------------------------- */
+const panel=document.getElementById("panel");
+const elType=document.getElementById("ptype");
+const elTitle=document.getElementById("ptitle");
+const elCode=document.getElementById("pcode");
+const elBody=document.getElementById("pbody");
+const elFoot=document.getElementById("pfoot");
+document.getElementById("pclose").onclick=()=> clearFocus();
+
+function dotFor(n){
+  if(n.type==="goal")   return `<span class="ic" style="background:${n.color}"></span>`;
+  if(n.type==="concept")return `<span class="ic" style="background:var(--concept)"></span>`;
+  return `<span class="ic ring"></span>`;
+}
+function metaFor(n){
+  if(n.type==="goal")    return "SDG "+n.num;
+  if(n.type==="document")return n.code||"doc";
+  return n.deg+" links";
+}
+function neighborItems(n, typeFilter){
+  const arr=[...n.neighbors].filter(x=> typeFilter.includes(x.type));
+  arr.sort((a,b)=> (b.deg-a.deg));
+  if(!arr.length) return `<div class="isolate-note">None.</div>`;
+  return arr.map(x=>`
+    <div class="item" data-go="${x.id}">
+      ${dotFor(x)}
+      <span class="nm">${x.type==="goal" ? ("SDG "+x.num+" · "+x.name) : x.name}</span>
+      <span class="meta">${metaFor(x)}</span>
+    </div>`).join("");
+}
+
+function openPanel(n){
+  let typeLabel, swatch;
+  if(n.type==="goal"){ typeLabel="Sustainable Development Goal"; swatch=`<span class="swatch" style="background:${n.color}"></span>`; }
+  else if(n.type==="concept"){ typeLabel="Concept · Topic"; swatch=`<span class="swatch" style="background:var(--concept)"></span>`; }
+  else { typeLabel="Source Document"; swatch=`<span class="swatch" style="background:transparent;border:1.5px solid var(--doc)"></span>`; }
+
+  elType.innerHTML = swatch + typeLabel;
+  elTitle.textContent = n.type==="goal" ? n.name : n.name;
+  elCode.textContent = n.type==="goal" ? ("Goal "+n.num+" of 17") : (n.type==="document" ? ("Reference "+(n.code||"")) : (n.deg+" connections in the corpus"));
+
+  let html="";
+  if(n.type==="goal"){
+    html += group("Evidence documents", neighborItems(n,["document"]));
+    html += group("Related concepts",   neighborItems(n,["concept"]));
+    html += group("Linked goals",        neighborItems(n,["goal"]));
+  } else if(n.type==="document"){
+    html += group("Supports goals",   neighborItems(n,["goal"]));
+    html += group("Tagged concepts",  neighborItems(n,["concept"]));
+  } else {
+    html += group("Advances goals",   neighborItems(n,["goal"]));
+    html += group("Documents",        neighborItems(n,["document"]));
+    html += group("Related concepts", neighborItems(n,["concept"]));
+  }
+  elBody.innerHTML=html;
+
+  elFoot.innerHTML = n.type==="goal"
+    ? `<div class="isolate-note">Spotlighting this goal's supporting subgraph. Click empty space to reset.</div>`
+    : `<div class="isolate-note">Click a connected node to follow the thread.</div>`;
+
+  // wire item navigation
+  elBody.querySelectorAll(".item").forEach(it=>{
+    it.onclick=()=>{
+      const tgt=byId[it.getAttribute("data-go")];
+      if(!tgt) return;
+      selNode=tgt; recomputeHighlight(); openPanel(tgt);
+      if(tgt.type==="goal") spotlightGoal(tgt);
+      else { isolateSet=null; Graph.centerAt(tgt.x,tgt.y,600); Graph.zoom(Math.max(Graph.zoom(),2.2),600); }
+    };
+  });
+
+  panel.classList.add("open");
+}
+function group(title, inner){
+  const m=(inner.match(/data-go=/g)||[]).length;
+  return `<div class="group"><h4>${title} <span class="count">${m?("· "+m):""}</span></h4>${inner}</div>`;
+}
+function closePanel(){ panel.classList.remove("open"); }
+
+/* ---------------------------------------------------------------------------
+   8. SEARCH + FILTERS + REPLAY
+--------------------------------------------------------------------------- */
+const searchEl=document.getElementById("search");
+searchEl.addEventListener("input", ()=>{
+  const q=searchEl.value.trim().toLowerCase();
+  if(!q){ searchMatches=null; setStatus("Click an SDG to spotlight its evidence."); return; }
+  const m=new Set();
+  nodes.forEach(n=>{
+    if(!visibleType[n.type]) return;
+    const hay=(n.name+" "+n.label+" "+(n.code||"")).toLowerCase();
+    if(hay.includes(q)) m.add(n.id);
+  });
+  searchMatches = m.size? m : new Set(["__none__"]);
+  isolateSet=null;
+  setStatus(m.size ? `Search — <b>${m.size}</b> match${m.size>1?"es":""} for “${searchEl.value}”` : `No matches for “${searchEl.value}”`);
+  if(m.size){
+    const pts=nodes.filter(n=>m.has(n.id));
+    const cx=pts.reduce((s,n)=>s+n.x,0)/pts.length;
+    const cy=pts.reduce((s,n)=>s+n.y,0)/pts.length;
+    Graph.centerAt(cx,cy,600);
+    if(pts.length<=2) Graph.zoom(3.2,700);
+    else setTimeout(()=>Graph.zoomToFit(700,140, n=>m.has(n.id)),40);
+  }
+});
+searchEl.addEventListener("keydown",e=>{ if(e.key==="Escape"){ searchEl.value=""; searchMatches=null; searchEl.blur(); setStatus("Click an SDG to spotlight its evidence."); }});
+
+document.querySelectorAll("#filters button").forEach(b=>{
+  b.onclick=()=>{
+    const t=b.getAttribute("data-type");
+    visibleType[t]=!visibleType[t];
+    b.classList.toggle("on", visibleType[t]);
+    // collapse focus/selection that may now be hidden
+    if(selNode && !visibleType[selNode.type]) { selNode=null; closePanel(); }
+    isolateSet=null;
+    applyData();
+    // relayout the remaining nodes
+    warm=0; driftOn=false; Graph.cooldownTicks(Infinity); Graph.d3ReheatSimulation();
+  };
+});
+
+document.getElementById("replay").onclick=()=> replay();
+function replay(){
+  clearFocus();
+  searchEl.value="";
+  driftOn=false; settled=false; warm=0;
+  nodes.forEach(n=>{
+    n.fx=undefined; n.fy=undefined; n._bx=null; n._by=null;
+    n.x=(Math.random()-0.5)*36; n.y=(Math.random()-0.5)*36; n.vx=0; n.vy=0;
+  });
+  Graph.cooldownTicks(Infinity);
+  Graph.d3ReheatSimulation();
+  setStatus("Re-running layout…");
+}
+
+/* ---------------------------------------------------------------------------
+   9. MISC
+--------------------------------------------------------------------------- */
+const statusEl=document.getElementById("status");
+let statusTimer=null;
+function setStatus(html){
+  statusEl.innerHTML=html; statusEl.style.opacity="1";
+}
+
+function resize(){ Graph.width(window.innerWidth).height(window.innerHeight); }
+window.addEventListener("resize", resize);
+resize();
+
+applyData();
+setStatus("Building the knowledge graph…");
+
+// expose for presenter scripting / verification
+window.SallyGraph = Graph;
+window.SallyNodes = byId;
+
+})();
+</script>
+</body>
+</html>
