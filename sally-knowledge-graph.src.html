@@ -505,8 +505,9 @@ const Graph = ForceGraph()(el)
   .nodeRelSize(1)
   .nodeId("id")
   .linkSource("source").linkTarget("target")
-  .cooldownTicks(Infinity)        // keep rendering; we manage rest/drift ourselves
-  .d3VelocityDecay(0.32)
+  .cooldownTicks(Infinity)        // keep rendering; we settle then freeze (no constant wobble)
+  .d3VelocityDecay(0.62)          // firmer, less springy — nodes glide into place, not jello
+  .d3AlphaDecay(0.05)             // settle quickly + damp reheats fast (solid feel)
   .warmupTicks(0);
 
 Graph.d3Force("charge").strength(-200).distanceMax(560);
@@ -726,16 +727,7 @@ Graph.onEngineTick(()=>{
 });
 Graph.onEngineStop(()=> freezeIntoDrift(true));
 
-// gentle continuous drift around each node's settled position → "alive at rest"
-Graph.onRenderFramePre((ctx, scale)=>{
-  if(!driftOn) return;
-  const t = performance.now()/1000;
-  for(const n of nodes){
-    if(n===dragNode || n.fx!=null || n._bx==null) continue;
-    n.x = n._bx + Math.sin(t*0.42 + n._ph) * n._amp;
-    n.y = n._by + Math.cos(t*0.37 + n._ph*1.3) * n._amp;
-  }
-});
+// nodes settle once and then stay put — calm, Obsidian-like rest state (no constant wobble)
 
 /* ---------------------------------------------------------------------------
    6. INTERACTIONS
@@ -745,12 +737,9 @@ Graph.onNodeHover(n=>{
   el.style.cursor = n ? "pointer" : "default";
   recomputeHighlight();
 });
-Graph.onNodeDrag(n=>{
-  dragNode=n; driftOn=false;
-  if(settled){ warm=0; Graph.cooldownTicks(Infinity); }  // let neighbours relax while dragging
-});
+Graph.onNodeDrag(n=>{ dragNode=n; driftOn=false; });       // move just this node; neighbours hold steady
 Graph.onNodeDragEnd(n=>{
-  dragNode=null; n.fx=undefined; n.fy=undefined;          // release back into gentle drift
+  dragNode=null; n.fx=n.x; n.fy=n.y;                        // pin where dropped — stays put, feels solid
   n._bx=n.x; n._by=n.y;
 });
 
