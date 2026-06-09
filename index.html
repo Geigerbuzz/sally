@@ -8,12 +8,34 @@
 <link rel="stylesheet" href="assets/sally.css">
 <style>
   .shell{ position:relative; z-index:1 }          /* content floats above the animated backdrop */
-  #widget-grid{ background-image:none }            /* the frosted colour field is the texture */
-  .dash-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:6px }
+  #widget-grid{ background-image:none; grid-auto-flow:dense } /* ordered flow so widgets reflow when reordered */
+  .dash-head{ display:flex; align-items:flex-end; justify-content:space-between; gap:20px; flex-wrap:wrap; margin-bottom:14px }
   .dash-head h1{ margin-top:9px; font-size:36px; font-weight:600; letter-spacing:-0.028em; line-height:1.05 }
   .dash-head .sub{ color:var(--text-secondary); margin-top:9px; font-size:16px; max-width:58ch; line-height:1.5 }
-  .dash-actions{ display:flex; align-items:center; gap:12px }
-  @media (max-width:760px){ .dash-actions{ width:100%; justify-content:space-between } }
+  .dash-actions{ display:flex; align-items:center; gap:10px }
+  #edit-toggle.on{ color:var(--accent); border-color:var(--accent-line) }
+
+  /* board tabs (Davlon-style: Shared / Group / … as many as you want) */
+  .board-bar{ display:flex; align-items:center; gap:10px; margin:2px 0 18px; flex-wrap:wrap }
+  .board-add{ width:36px;height:36px; border-radius:11px; flex:none; cursor:pointer; font-size:18px;
+    border:1px solid var(--glass-border); background:var(--glass-bg); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+    color:var(--text-secondary); display:flex; align-items:center; justify-content:center; transition:.16s var(--ease) }
+  .board-add:hover{ color:var(--accent); border-color:var(--accent-line); transform:translateY(-1px) }
+  .board-empty{ grid-column:1 / -1; color:var(--text-tertiary); font-size:14px; padding:46px 4px }
+  .board-tabs .bt-del{ margin-left:2px; color:var(--bad); font-size:14px; cursor:pointer; opacity:.85 }
+  .board-tabs .bt-del:hover{ opacity:1 }
+
+  /* iOS-style edit mode: jiggle + delete badge */
+  @keyframes jiggle{ 0%{transform:rotate(-0.8deg)} 50%{transform:rotate(0.8deg)} 100%{transform:rotate(-0.8deg)} }
+  .widget-grid.editing .widget{ animation:jiggle .3s ease-in-out infinite; animation-delay:var(--jd,0s); cursor:grab }
+  .widget-grid.editing .widget:hover{ transform:none; box-shadow:0 1px 0 var(--glass-hi) inset, var(--shadow-1) }
+  .widget-grid.editing .widget.dragging{ animation:none }
+  .widget.dragging{ opacity:.4 }
+  .w-del{ position:absolute; top:-8px; left:-8px; width:24px;height:24px; border-radius:50%; z-index:6; padding:0;
+    border:2px solid var(--bg-base); border:2px solid rgba(255,255,255,.85); cursor:pointer; display:none;
+    align-items:center; justify-content:center; font-size:15px; color:#fff; background:#ff453a; box-shadow:0 2px 8px rgba(0,0,0,.45) }
+  .widget-grid.editing .w-del{ display:flex }
+  @media (max-width:760px){ .dash-actions{ width:auto } }
 </style>
 </head>
 <body>
@@ -27,8 +49,14 @@
         <div class="sub" id="subline">Live sustainability coverage across the 17 UN Sustainable Development Goals.</div>
       </div>
       <div class="dash-actions">
+        <button class="btn btn-sm" id="edit-toggle" title="Rearrange & remove widgets"><i class="ri-edit-2-line"></i> Edit</button>
         <button class="btn btn-sm" id="auto-arrange" title="Tidy the widgets"><i class="ri-apps-2-line"></i> Arrange</button>
       </div>
+    </div>
+
+    <div class="board-bar">
+      <div class="tabs" id="board-tabs"></div>
+      <button class="board-add" id="board-add" title="New board"><i class="ri-add-line"></i></button>
     </div>
 
     <div class="widget-grid" id="widget-grid"></div>
