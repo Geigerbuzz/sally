@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Data Sources</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item active" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <!-- Sources Page (Active by default here) -->
+        <!-- Note: We add 'active' class to simulate correct display manually -->
+        <section id="sources" class="page active">
+            <canvas id="neural-bg"></canvas>
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <h1>Data & Sources</h1>
+                    <div class="online-team">
+                        <div class="team-bubble" style="background: #9b59b6;" title="Shay">S</div>
+                        <div class="team-bubble" style="background: #3498db;" title="Mark">M</div>
+                        <div class="team-bubble" style="background: #e67e22;" title="Ali">A</div>
+                    </div>
+                </header>
+
+                <!-- Centered Navigation -->
+                <div class="sources-nav">
+                    <a href="sources.html" class="source-tab active">Static</a>
+                    <a href="sources_live.html" class="source-tab">Live</a>
+                    <a href="sources_legacy.html" class="source-tab">Legacy</a>
+                </div>
+
+                <!-- Static View (Uploads & Files) -->
+                <div class="source-view active">
+                    <div class="upload-section">
+                        <div class="card">
+                            <h2>Upload Documents</h2>
+                            <p style="color: var(--text-secondary); margin-bottom: 16px;">Drag & drop files here to
+                                process them
+                                through the pipeline.</p>
+                            <div class="upload-zone">
+                                <i class="ri-upload-cloud-2-line"
+                                    style="font-size: 48px; color: var(--accent); margin-bottom: 16px;"></i>
+                                <span style="font-weight: 500;">Click or Drag files to upload</span>
+                                <span style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">PDF, CSV,
+                                    DOCX
+                                    supported</span>
+                            </div>
+                        </div>
+
+                        <div class="sources-list text-section" style="margin-top: 20px;">
+                            <h3><i class="ri-file-text-line"></i> Processed Documents</h3>
+                            <ul>
+                                <li><span class="status-dot"></span> Q3_Financial_Projections.pdf <span
+                                        class="meta">Ready</span></li>
+                                <li><span class="status-dot"></span> Employee_Handbook_2024.pdf <span
+                                        class="meta">Ready</span></li>
+                                <li><span class="status-dot processing"></span> Merger_Acquisition_Draft.docx <span
+                                        class="meta">Scanning...</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="neurons.js"></script>
+</body>
+
+</html>

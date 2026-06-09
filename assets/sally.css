@@ -3,7 +3,6 @@
    Near-black surfaces · Inter · iOS-blue accent · glass dock & modals ·
    the 17 official SDG colors carry all data-viz warmth (defined in corpus.js)
    ========================================================================= */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 @import url('../vendor/remixicon.css');
 
 :root{
@@ -13,7 +12,7 @@
   --bg-surface-2:#242427;
   --bg-elev:#2a2a2d;
   --bg-base:radial-gradient(125% 120% at 50% -5%, #181426 0%, #0a0812 72%);  /* behind the animated colour */
-  --frost-tint:linear-gradient(180deg, rgba(10,8,18,0.40), rgba(7,6,13,0.56)); /* mutes the animation to ambient */
+  --frost-tint:linear-gradient(180deg, rgba(8,6,14,0.66) 0%, rgba(10,8,18,0.40) 20%, rgba(7,6,13,0.54) 100%); /* darker top band keeps page titles readable */
 
   /* text */
   --text-primary:#ffffff;
@@ -61,8 +60,8 @@
   --content-pad:32px;
   --maxw:1240px;
 
-  /* type */
-  --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  /* type — Neue Helvetica (uses the system Helvetica Neue on Apple devices) */
+  --font:'Helvetica Neue','HelveticaNeue','Helvetica Neue LT Std',Helvetica,Arial,sans-serif;
   --mono:'SF Mono','JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
 }
 
@@ -72,7 +71,7 @@
   --bg-surface-2:#f0f0f3;
   --bg-elev:#ffffff;
   --bg-base:radial-gradient(125% 120% at 50% -5%, #eef0fb 0%, #e7e6f3 72%);
-  --frost-tint:linear-gradient(180deg, rgba(247,246,252,0.46), rgba(242,240,250,0.60));
+  --frost-tint:linear-gradient(180deg, rgba(248,247,252,0.70) 0%, rgba(247,246,252,0.46) 20%, rgba(242,240,250,0.60) 100%);
   --text-primary:#1d1d1f;
   --text-secondary:#6e6e73;
   --text-tertiary:#a1a1a6;
@@ -172,6 +171,16 @@ button{font-family:inherit}
   42%{transform:translate(-2%,4%)} 57%{transform:translate(4%,1%)} 71%{transform:translate(-3%,-2%)} 85%{transform:translate(2%,3%)} 100%{transform:translate(0,0)} }
 @media (prefers-reduced-motion:reduce){ .bg-blobs,.bg-blobs i,.bg-grain{ animation:none } }
 
+/* smooth, app-like page changes (no white flash / reload jank) — Chrome cross-document transitions.
+   The dock + backdrop are pinned so they persist while only the content crossfades. */
+@view-transition{ navigation:auto }
+.floating-dock{ view-transition-name:sally-dock }
+.bg{ view-transition-name:sally-bg }
+.bg-vignette{ view-transition-name:sally-bgvig }
+::view-transition-group(sally-bg),::view-transition-group(sally-bgvig){ animation-duration:0s }
+::view-transition-old(root),::view-transition-new(root){ animation-duration:.34s; animation-timing-function:cubic-bezier(0.2,0.8,0.2,1) }
+@media (prefers-reduced-motion:reduce){ ::view-transition-group(*){ animation-duration:.001ms !important } }
+
 /* scrollbars */
 *::-webkit-scrollbar{width:9px;height:9px}
 *::-webkit-scrollbar-track{background:transparent}
@@ -191,7 +200,8 @@ h3{font-size:16px; font-weight:600}
 
 /* ====================== app shell ====================== */
 /* dock-clearing content wrapper used by document-flow pages */
-.shell{ min-height:100vh; padding-left:calc(var(--dock-width) + var(--dock-margin)*2); transition:padding .4s var(--ease) }
+.shell{ position:relative; z-index:1;   /* lift page content above the fixed .bg backdrop (plain text would otherwise paint under it) */
+  min-height:100vh; padding-left:calc(var(--dock-width) + var(--dock-margin)*2); transition:padding .4s var(--ease) }
 body.dock-right .shell{ padding-left:0; padding-right:calc(var(--dock-width) + var(--dock-margin)*2) }
 .shell .inner{ max-width:var(--maxw); margin:0 auto; padding:46px var(--content-pad) 96px; animation:fadeIn .4s ease }
 @keyframes fadeIn{from{opacity:0; transform:translateY(10px)} to{opacity:1; transform:none}}
@@ -203,6 +213,13 @@ body.dock-right .shell{ padding-left:0; padding-right:calc(var(--dock-width) + v
 .page-head .sub{ color:var(--text-secondary); margin-top:9px; font-size:16px; max-width:60ch; line-height:1.5 }
 .page-head.row{ display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap }
 .page-head .head-actions{ display:flex; align-items:center; gap:12px }
+
+/* legibility halo — page titles sit directly on the animated colour field (no glass behind),
+   so a soft shadow keeps them readable when a bright blob drifts past */
+.page-head h1, .page-head .sub, .page-head .eyebrow,
+.dash-head h1, .dash-head .sub, .dash-head .eyebrow{ text-shadow:0 1px 18px rgba(0,0,0,0.32) }
+[data-theme="light"] .page-head h1, [data-theme="light"] .page-head .sub, [data-theme="light"] .page-head .eyebrow,
+[data-theme="light"] .dash-head h1, [data-theme="light"] .dash-head .sub, [data-theme="light"] .dash-head .eyebrow{ text-shadow:0 1px 16px rgba(255,255,255,0.7) }
 
 /* segmented tab control — change category within a page (Davlon-style, from the top) */
 .tabs{ position:relative; display:inline-flex; align-items:center; gap:2px; padding:4px; border-radius:14px;

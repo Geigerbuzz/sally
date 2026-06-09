@@ -1,0 +1,703 @@
+:root {
+    /* Colors - Dark Mode Default */
+    --bg-body: #0f0f11;
+    --bg-surface: #1c1c1e;
+    --text-primary: #ffffff;
+    --text-secondary: #a1a1a6;
+    --accent: #0a84ff;
+    --dock-bg: rgba(28, 28, 30, 0.65);
+    --dock-border: rgba(255, 255, 255, 0.1);
+
+    /* Layout */
+    --dock-width: 70px;
+    --dock-margin: 16px;
+    --content-padding: 32px;
+}
+
+[data-theme="light"] {
+    --bg-body: #f5f5f7;
+    --bg-surface: #ffffff;
+    --text-primary: #1d1d1f;
+    --text-secondary: #86868b;
+    --accent: #007aff;
+    --dock-bg: rgba(255, 255, 255, 0.65);
+    --dock-border: rgba(0, 0, 0, 0.05);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+    height: 100vh;
+    overflow: hidden;
+    /* App-like feel */
+    display: flex;
+}
+
+/* Dock Styling */
+.floating-dock {
+    position: fixed;
+    top: 50%;
+    transform: translateY(-50%);
+    left: var(--dock-margin);
+    width: var(--dock-width);
+    background: var(--dock-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--dock-border);
+    border-radius: 20px;
+    padding: 12px 0;
+    z-index: 100;
+    transition: left 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), right 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
+body.dock-right .floating-dock {
+    left: auto;
+    right: var(--dock-margin);
+}
+
+.dock-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    width: 100%;
+}
+
+.dock-item {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    font-size: 24px;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    /* Fix for <a> tags */
+}
+
+.dock-item:hover {
+    background-color: rgba(122, 122, 122, 0.1);
+    color: var(--text-primary);
+    transform: scale(1.05);
+}
+
+.dock-item.active {
+    color: var(--accent);
+    background-color: rgba(122, 122, 122, 0.1);
+}
+
+.dock-divider {
+    height: 1px;
+    width: 40%;
+    background-color: var(--dock-border);
+    margin: 4px 0;
+}
+
+/* Main Content Area */
+#content {
+    flex: 1;
+    margin-left: calc(var(--dock-width) + var(--dock-margin) * 2);
+    /* margin-right set dynamically if needed, but flex handles it well usually */
+    padding: var(--content-padding);
+    height: 100%;
+    overflow-y: auto;
+    transition: margin 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+body.dock-right #content {
+    margin-left: 0;
+    margin-right: calc(var(--dock-width) + var(--dock-margin) * 2);
+}
+
+/* Sections */
+.page {
+    display: none;
+    animation: fadeIn 0.3s ease;
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page.active {
+    display: block;
+}
+
+header {
+    margin-bottom: 32px;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.online-team {
+    display: flex;
+    align-items: center;
+}
+
+.team-bubble {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    color: #fff;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--bg-body);
+    margin-left: -10px;
+    cursor: default;
+    transition: transform 0.2s;
+}
+
+.team-bubble:first-child {
+    margin-left: 0;
+}
+
+.team-bubble:hover {
+    transform: translateY(-2px);
+    z-index: 5;
+    position: relative;
+}
+
+h1 {
+    font-size: 32px;
+    font-weight: 600;
+}
+
+h2 {
+    font-size: 20px;
+    font-weight: 500;
+    margin-bottom: 16px;
+}
+
+/* Sources Page Tabs */
+.sources-nav {
+    display: flex;
+    justify-content: center;
+    /* Centered as requested */
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    padding-bottom: 10px;
+}
+
+.source-tab {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    padding: 8px 24px;
+    cursor: pointer;
+    font-size: 1rem;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    /* For when they are <a> tags */
+    display: flex;
+    align-items: center;
+}
+
+.source-tab:hover {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.source-tab.active {
+    color: var(--text-primary);
+    background: rgba(255, 255, 255, 0.1);
+    font-weight: 500;
+}
+
+.source-view {
+    animation: fadeIn 0.3s ease;
+}
+
+.status-dot.processing {
+    background-color: var(--accent-warning);
+    box-shadow: 0 0 8px var(--accent-warning);
+}
+
+.status-dot.expired {
+    background-color: var(--text-secondary);
+    box-shadow: none;
+}
+
+/* Cards & Components */
+.card {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--dock-border);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.02);
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+}
+
+/* Toggle Switch */
+input[type="checkbox"] {
+    accent-color: var(--accent);
+    transform: scale(1.2);
+    cursor: pointer;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Widget Grid */
+.widget-grid {
+    display: grid;
+    /* Fixed column size for easier coordinate calculation */
+    grid-template-columns: repeat(auto-fill, 160px);
+    grid-auto-rows: 160px;
+    gap: 24px;
+    padding-bottom: 40px;
+    min-height: 80vh;
+
+    /* Decoration - Top Margin */
+    margin-top: 16px;
+
+    /* Responsive Adjustment */
+    width: 100%;
+    /* Allow horizontal scrolling if fixed widgets exceed viewport */
+    overflow-x: auto;
+    /* Ensure content box sizing doesn't clip with padding */
+    box-sizing: border-box;
+
+    /* Grid Pegs */
+    background-image: radial-gradient(circle, var(--text-secondary) 1px, transparent 1px);
+    background-size: 184px 184px;
+    /* 160px + 24px gap = 184px pitch */
+    background-position: 80px 80px;
+    /* Center of first cell */
+    /* Note: background-attachment: local might be needed if scrolling? 
+       Actually default (scroll) attaches to element. local moves with content. 
+       If we scroll X, we want dots to move with content. */
+    background-attachment: local;
+}
+
+/* Team Avatar Stack */
+.team-stack {
+    display: flex;
+    align-items: center;
+    margin-right: 16px;
+}
+
+.avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 2px solid var(--bg-body);
+    background-color: var(--dock-border);
+    margin-left: -12px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--text-primary);
+    font-weight: 600;
+    overflow: hidden;
+}
+
+.avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.avatar:first-child {
+    margin-left: 0;
+}
+
+.avatar:hover {
+    transform: translateY(-4px);
+    z-index: 10;
+}
+
+
+.widget {
+    background-color: var(--bg-surface);
+    border: 1px solid var(--dock-border);
+    border-radius: 20px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    cursor: grab;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    user-select: none;
+    overflow: hidden;
+}
+
+.widget:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    z-index: 2;
+}
+
+.widget:active {
+    cursor: grabbing;
+    transform: scale(0.98);
+}
+
+.widget.dragging {
+    opacity: 0.5;
+    transform: scale(0.95);
+}
+
+/* Size Classes */
+.w-1x1 {
+    grid-column: span 1;
+    grid-row: span 1;
+}
+
+.w-2x2 {
+    grid-column: span 2;
+    grid-row: span 2;
+}
+
+.w-2x3 {
+    grid-column: span 2;
+    grid-row: span 3;
+}
+
+.w-1x2 {
+    grid-column: span 1;
+    grid-row: span 2;
+}
+
+/* Widget Content Styling */
+.widget h3 {
+    font-size: 16px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--text-secondary);
+}
+
+.widget p {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+    background: rgba(128, 128, 128, 0.2);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: rgba(128, 128, 128, 0.4);
+}
+
+.w-2x1 {
+    grid-column: span 2;
+    grid-row: span 1;
+}
+
+/* Floating Action Button */
+.fab {
+    position: fixed;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 64px;
+    height: 64px;
+    background: var(--dock-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--dock-border);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+    transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1), background-color 0.2s;
+    z-index: 200;
+}
+
+.fab i {
+    font-size: 32px;
+    color: var(--accent);
+    transition: transform 0.2s;
+}
+
+.fab:hover {
+    transform: translateX(-50%) scale(1.1) rotate(90deg);
+    background-color: var(--bg-surface);
+}
+
+.fab:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+body.dock-right .fab {
+    /* If dock is on right, center is still center, so no change needed unless it overlaps dock? 
+       Dock is on side, center bottom is usually free. */
+    left: 50%;
+    right: auto;
+}
+
+/* Neural Background Canvas */
+#sources {
+    position: relative;
+    overflow: hidden;
+    /* Contain the canvas */
+    height: 100%;
+    /* Ensure it fills the scrollable content area */
+    /* Remove display: flex to prevent overriding .page { display: none } */
+}
+
+#sources.active {
+    display: flex;
+    /* Only apply flex when active */
+    flex-direction: column;
+}
+
+#neural-bg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+    pointer-events: none;
+    opacity: 0.5;
+}
+
+#sources .page-content,
+#sources header {
+    position: relative;
+    z-index: 1;
+}
+
+/* Glass effect for Sources page containers */
+#sources .card {
+    background: rgba(var(--bg-surface-rgb), 0.1);
+    /* Even lower opacity (0.1) */
+    background: rgba(30, 30, 30, 0.1);
+    /* Fallback */
+    backdrop-filter: blur(6px);
+    /* Reduced from 12px */
+    -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.1);
+}
+
+/* Light mode override */
+[data-theme="light"] #sources .card {
+    background: rgba(255, 255, 255, 0.15);
+    /* More TRANSPARENT (was 0.4) */
+    border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+/* AI Modal / Panel (Compact Chatbar Style) */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    pointer-events: none;
+    z-index: 1000;
+    display: none;
+}
+
+.modal-overlay.active {
+    display: flex;
+    /* Flex centers it, but we use absolute positioning */
+}
+
+.ai-modal {
+    position: absolute;
+    bottom: 32px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+
+    /* Compact size */
+    width: 90%;
+    max-width: 480px;
+    /* Reduced from 800px */
+
+    background: var(--dock-bg);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid var(--dock-border);
+    border-radius: 20px;
+    padding: 16px 20px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.25);
+    pointer-events: auto;
+    opacity: 0;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    transform-origin: bottom center;
+
+    /* Vertical Stack */
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 8px;
+}
+
+.modal-overlay.active .ai-modal {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.ai-header {
+    display: grid;
+    grid-template-columns: 80px 1fr 80px;
+    /* Left (Close), Center (Title), Right (Action) */
+    align-items: center;
+    /* Adjust margin to match compact feel */
+    margin-bottom: 8px;
+    width: 100%;
+}
+
+.ai-header h2 {
+    font-size: 13px;
+    /* Smaller, label-like */
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-align: center;
+}
+
+.close-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 18px;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 50%;
+    display: flex;
+    transition: all 0.2s;
+    justify-self: start;
+    /* Align to left of its grid cell */
+}
+
+.close-btn:hover {
+    background: rgba(128, 128, 128, 0.2);
+    color: var(--text-primary);
+}
+
+/* Actions Row - Now just wrapper for input */
+.ai-actions {
+    display: flex;
+    width: 100%;
+}
+
+/* Seamless Input */
+.ai-input {
+    flex: 1;
+    /* Auto height logic handled by JS, but set min-height */
+    min-height: 24px;
+    max-height: 200px;
+    background: transparent;
+    border: none;
+    border-radius: 0;
+    color: var(--text-primary);
+    padding: 4px 0;
+    /* Reduced Vertical padding */
+    font-family: inherit;
+    font-size: 15px;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    margin: 0;
+    display: block;
+    /* Textarea normal behavior */
+    overflow: hidden;
+    /* Hide scrollbar for auto-grow effect */
+}
+
+.ai-input:focus {
+    /* No visual change on focus for seamless look */
+    border: none;
+    outline: none;
+}
+
+.ai-generate-btn {
+    width: auto;
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    /* Compact padding */
+    height: 32px;
+    /* Compact height */
+    border-radius: 16px;
+    /* Pill shape */
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    white-space: nowrap;
+    transition: transform 0.2s, opacity 0.2s;
+    justify-self: end;
+    /* Align to right of grid cell */
+}
+
+.ai-generate-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+.ai-generate-btn:active {
+    transform: scale(0.98);
+}
+
+/* Add a placeholder text element if we want to show instructions cleanly? 
+   No, textarea placeholder is fine. */

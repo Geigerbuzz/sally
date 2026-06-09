@@ -10,7 +10,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   /* ---- Chart.js global theme ---- */
   if(window.Chart){
-    Chart.defaults.font.family = "'Inter',-apple-system,sans-serif";
+    Chart.defaults.font.family = "'Helvetica Neue',Helvetica,Arial,sans-serif";
     Chart.defaults.font.size = 11;
     Chart.defaults.color = getCss("--text-secondary") || "#a1a1a6";
     Chart.defaults.plugins.tooltip.backgroundColor = "rgba(20,20,22,0.92)";

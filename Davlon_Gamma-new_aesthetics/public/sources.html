@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Data Sources</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        /* Upload Animation Styles */
+        @keyframes uploadSuccess {
+            0% {
+                transform: scale(1);
+            }
+
+            30% {
+                transform: scale(1.05);
+            }
+
+            60% {
+                transform: scale(0.98);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes uploadFail {
+
+            0%,
+            100% {
+                transform: translateX(0);
+            }
+
+            10%,
+            50%,
+            90% {
+                transform: translateX(-8px);
+            }
+
+            30%,
+            70% {
+                transform: translateX(8px);
+            }
+        }
+
+        @keyframes successPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(52, 199, 89, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 20px rgba(52, 199, 89, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(52, 199, 89, 0);
+            }
+        }
+
+        @keyframes failPulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(255, 59, 48, 0.5);
+            }
+
+            50% {
+                box-shadow: 0 0 0 20px rgba(255, 59, 48, 0);
+            }
+
+            100% {
+                box-shadow: 0 0 0 0 rgba(255, 59, 48, 0);
+            }
+        }
+
+        @keyframes iconBounce {
+            0% {
+                transform: scale(0.5);
+                opacity: 0;
+            }
+
+            50% {
+                transform: scale(1.2);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+
+        .upload-zone {
+            transition: border-color 0.3s ease, background-color 0.3s ease;
+        }
+
+        .upload-zone.success {
+            border-color: #34c759 !important;
+            background: rgba(52, 199, 89, 0.15) !important;
+            animation: uploadSuccess 0.5s ease-out, successPulse 0.8s ease-out;
+        }
+
+        .upload-zone.success i {
+            color: #34c759 !important;
+            animation: iconBounce 0.4s ease-out;
+        }
+
+        .upload-zone.fail {
+            border-color: #ff3b30 !important;
+            background: rgba(255, 59, 48, 0.15) !important;
+            animation: uploadFail 0.5s ease-out, failPulse 0.8s ease-out;
+        }
+
+        .upload-zone.fail i {
+            color: #ff3b30 !important;
+            animation: iconBounce 0.4s ease-out;
+        }
+    </style>
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item active" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <!-- Sources Page (Active by default here) -->
+        <!-- Note: We add 'active' class to simulate correct display manually -->
+        <section id="sources" class="page active">
+            <canvas id="neural-bg"></canvas>
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <h1>Data & Sources</h1>
+                    <!-- Team removed -->
+                </header>
+
+                <!-- Centered Navigation -->
+                <div class="sources-nav">
+                    <a href="sources.html" class="source-tab active">Static</a>
+                    <a href="sources_live.html" class="source-tab">Live</a>
+                    <a href="sources_legacy.html" class="source-tab">Legacy</a>
+                </div>
+
+                <!-- Static View (Uploads & Files) -->
+                <div class="source-view active">
+                    <!-- Upload Card -->
+                    <div class="card" style="padding: 24px; margin-bottom: 32px;">
+                        <h2 style="margin-bottom: 8px;"><i class="ri-upload-cloud-line"
+                                style="margin-right: 8px;"></i>Upload Documents</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 16px; font-size: 14px;">
+                            Drag & drop files to process through the pipeline.
+                        </p>
+                        <div class="upload-zone"
+                            style="display: flex; flex-direction: column; align-items: center; justify-content: center; border: 2px dashed var(--dock-border); border-radius: 12px; padding: 32px; cursor: pointer; transition: border-color 0.2s;">
+                            <i class="ri-file-add-line"
+                                style="font-size: 40px; color: var(--accent); margin-bottom: 12px;"></i>
+                            <span style="font-weight: 500;">Click or drag files here</span>
+                            <span style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">PDF, CSV,
+                                DOCX, JSON, TXT, MD supported</span>
+                        </div>
+                        <!-- Hidden File Input -->
+                        <input type="file" id="file-upload" style="display: none;" multiple>
+                    </div>
+
+                    <!-- Processed Documents List -->
+                    <h2 style="margin-bottom: 16px;"><i class="ri-file-list-3-line"
+                            style="margin-right: 8px;"></i>Processed Documents</h2>
+                    <ul class="file-list"
+                        style="max-height: 400px; overflow-y: auto; margin: 0; padding: 0; list-style: none;">
+                        <li
+                            style="color: var(--text-secondary); font-style: italic; padding: 24px; text-align: center;">
+                            No documents uploaded yet.
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="neurons.js"></script>
+
+    <script>
+        // Upload Logic
+        const dropZone = document.querySelector('.upload-zone');
+        const fileInput = document.getElementById('file-upload');
+
+        if (dropZone && fileInput) {
+            dropZone.addEventListener('click', () => fileInput.click());
+
+            fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+            dropZone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--accent)';
+            });
+
+            dropZone.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--dock-border)';
+            });
+
+            dropZone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropZone.style.borderColor = 'var(--dock-border)';
+                handleFiles(e.dataTransfer.files);
+            });
+        }
+
+        async function handleFiles(files) {
+            if (!files.length) return;
+
+            const file = files[0]; // Handle one for now
+            const formData = new FormData();
+            formData.append('file', file);
+
+            // Show loading state
+            const p = dropZone.querySelector('span:first-of-type');
+            const icon = dropZone.querySelector('i');
+            const originalText = p.innerText;
+            const originalIconClass = icon.className;
+            p.innerText = "Uploading to Brain...";
+
+            // Helper to trigger animation
+            function showResult(isSuccess) {
+                const cls = isSuccess ? 'success' : 'fail';
+                const iconCls = isSuccess ? 'ri-checkbox-circle-fill' : 'ri-close-circle-fill';
+
+                // Apply animation class and icon
+                dropZone.classList.add(cls);
+                icon.className = iconCls;
+                p.innerText = isSuccess ? "Upload Complete!" : "Upload Failed";
+                p.style.color = isSuccess ? "#34c759" : "#ff3b30";
+
+                // Reset after animation
+                setTimeout(() => {
+                    dropZone.classList.remove(cls);
+                    icon.className = originalIconClass;
+                    p.innerText = originalText;
+                    p.style.color = "";
+                }, 2000);
+            }
+
+            try {
+                const endpoint = '/api/upload';
+
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+                    console.log("Upload Success:", result);
+                    showResult(true);
+                    addFileToList(file.name, "Processing", "Just now");
+                } else {
+                    const errData = await response.json().catch(() => ({ detail: "Unknown Error" }));
+                    throw new Error(errData.detail || "Upload failed");
+                }
+            } catch (e) {
+                console.error(e);
+                showResult(false);
+            }
+        }
+
+        async function loadDocuments() {
+            try {
+                const response = await fetch('/api/documents');
+                if (response.ok) {
+                    const data = await response.json();
+                    const list = document.querySelector('.file-list');
+
+                    if (data.documents.length > 0) {
+                        list.innerHTML = ''; // Clear empty state
+                        data.documents.forEach(doc => {
+                            // Format date casually if possible, else just use the string
+                            addFileToList(doc.name, "Active", "Stored");
+                        });
+                    }
+                }
+            } catch (e) {
+                console.error("Failed to load documents:", e);
+            }
+        }
+
+        // Load on startup
+        loadDocuments();
+
+        function addFileToList(name, status, meta) {
+            const list = document.querySelector('.file-list');
+
+            // Remove "No documents" placeholder if it exists
+            const placeholder = list.querySelector('li[style*="italic"]');
+            if (placeholder) placeholder.remove();
+
+            const listItem = document.createElement('li');
+            listItem.className = 'file-item';
+
+            // Determine icon and type label based on extension
+            let iconClass = 'ri-file-text-line'; // Default
+            let docType = 'Text';
+            if (name.endsWith('.pdf')) { iconClass = 'ri-file-pdf-line'; docType = 'PDF'; }
+            else if (name.endsWith('.csv')) { iconClass = 'ri-file-excel-line'; docType = 'CSV'; }
+            else if (name.endsWith('.json')) { iconClass = 'ri-file-code-line'; docType = 'JSON'; }
+            else if (name.endsWith('.doc') || name.endsWith('.docx')) { iconClass = 'ri-file-word-line'; docType = 'Word'; }
+            else if (name.endsWith('.zip')) { iconClass = 'ri-file-zip-line'; docType = 'Archive'; }
+            else if (name.endsWith('.md')) { iconClass = 'ri-markdown-line'; docType = 'Markdown'; }
+            else if (name.endsWith('.txt')) { iconClass = 'ri-file-text-line'; docType = 'Text'; }
+
+            listItem.style.cssText = 'padding: 16px 12px; min-height: 72px;';
+
+            listItem.innerHTML = `
+                <div class="file-icon" style="font-size: 24px;"><i class="${iconClass}"></i></div>
+                <div class="file-info" style="flex: 1; display: flex; flex-direction: column; gap: 4px;">
+                    <span class="file-name" style="font-weight: 500;">${name}</span>
+                    <div style="display: flex; flex-direction: column; gap: 2px; font-size: 12px; color: var(--text-secondary);">
+                        <span><strong>Type:</strong> ${docType}</span>
+                        <span><strong>Uploaded by:</strong> N/A</span>
+                    </div>
+                </div>
+                <div class="file-status">
+                     <span class="status-dot ${status.toLowerCase() === 'processing' ? 'processing' : 'active'}" title="${status}"></span>
+                </div>
+            `;
+            list.prepend(listItem);
+        }
+    </script>
+</body>
+
+</html>

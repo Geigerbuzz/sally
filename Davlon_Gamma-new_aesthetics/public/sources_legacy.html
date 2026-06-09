@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Legacy Documents</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        .legacy-notice {
+            background: rgba(255, 159, 10, 0.1);
+            border: 1px solid rgba(255, 159, 10, 0.3);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .legacy-notice i {
+            color: #ff9f0a;
+            font-size: 20px;
+            margin-top: 2px;
+        }
+
+        .legacy-notice-text {
+            flex: 1;
+        }
+
+        .legacy-notice-text strong {
+            display: block;
+            margin-bottom: 4px;
+            color: #ff9f0a;
+        }
+
+        .legacy-notice-text span {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .legacy-section {
+            margin-bottom: 32px;
+        }
+
+        .legacy-section-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--dock-border);
+            margin-bottom: 16px;
+        }
+
+        .legacy-section-header h3 {
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-secondary);
+            margin: 0;
+        }
+
+        .legacy-section-header .count {
+            background: var(--bg-tertiary);
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .legacy-doc {
+            background: var(--card-bg);
+            border: 1px solid var(--dock-border);
+            border-radius: 12px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            transition: border-color 0.2s;
+        }
+
+        .legacy-doc:hover {
+            border-color: var(--accent);
+        }
+
+        .legacy-doc-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        .legacy-doc-icon.deprioritized {
+            background: rgba(255, 159, 10, 0.15);
+            color: #ff9f0a;
+        }
+
+        .legacy-doc-icon.archived {
+            background: rgba(255, 69, 58, 0.15);
+            color: #ff453a;
+        }
+
+        .legacy-doc-info {
+            flex: 1;
+        }
+
+        .legacy-doc-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .legacy-doc-meta {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .legacy-doc-reason {
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        .legacy-doc-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .legacy-btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-weight: 500;
+            border: none;
+            cursor: pointer;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+
+        .legacy-btn:hover {
+            opacity: 0.85;
+        }
+
+        .legacy-btn:active {
+            transform: scale(0.97);
+        }
+
+        .legacy-btn.restore {
+            background: var(--accent);
+            color: #fff;
+        }
+
+        .legacy-btn.delete {
+            background: rgba(255, 69, 58, 0.15);
+            color: #ff453a;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        @media (max-width: 768px) {
+            .legacy-doc {
+                flex-wrap: wrap;
+            }
+
+            .legacy-doc-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: 12px;
+                padding-top: 12px;
+                border-top: 1px solid var(--dock-border);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item active" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <section id="sources" class="page active">
+            <canvas id="neural-bg"></canvas>
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <h1>Data & Sources</h1>
+                </header>
+
+                <!-- Centered Navigation -->
+                <div class="sources-nav">
+                    <a href="sources.html" class="source-tab">Static</a>
+                    <a href="sources_live.html" class="source-tab">Live</a>
+                    <a href="sources_legacy.html" class="source-tab active">Legacy</a>
+                </div>
+
+                <!-- Legacy View -->
+                <div class="source-view active">
+                    <div class="card" style="padding: 24px;">
+
+                        <!-- Notice Banner -->
+                        <div class="legacy-notice">
+                            <i class="ri-information-line"></i>
+                            <div class="legacy-notice-text">
+                                <strong>About Legacy Documents</strong>
+                                <span>These documents are deprioritized in search results. Click "Restore" to make them
+                                    active again.</span>
+                            </div>
+                        </div>
+
+                        <!-- Deprioritized Section -->
+                        <div class="legacy-section">
+                            <div class="legacy-section-header">
+                                <i class="ri-time-line" style="color: #ff9f0a;"></i>
+                                <h3>Deprioritized</h3>
+                                <span class="count">2</span>
+                            </div>
+
+                            <!-- Demo: Superseded Document -->
+                            <div class="legacy-doc">
+                                <div class="legacy-doc-icon deprioritized">
+                                    <i class="ri-file-pdf-line"></i>
+                                </div>
+                                <div class="legacy-doc-info">
+                                    <div class="legacy-doc-name">contract_v1.pdf</div>
+                                    <div class="legacy-doc-meta">Last accessed: 3 months ago</div>
+                                </div>
+                                <span class="legacy-doc-reason">Superseded by v2</span>
+                                <div class="legacy-doc-actions">
+                                    <button class="legacy-btn restore" onclick="restoreDoc('contract_v1.pdf')">
+                                        <i class="ri-refresh-line"></i> Restore
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Demo: Age Decay Document -->
+                            <div class="legacy-doc">
+                                <div class="legacy-doc-icon deprioritized">
+                                    <i class="ri-file-pdf-line"></i>
+                                </div>
+                                <div class="legacy-doc-info">
+                                    <div class="legacy-doc-name">Q1_report_2024.pdf</div>
+                                    <div class="legacy-doc-meta">Last accessed: 6 months ago</div>
+                                </div>
+                                <span class="legacy-doc-reason">Age decay</span>
+                                <div class="legacy-doc-actions">
+                                    <button class="legacy-btn restore" onclick="restoreDoc('Q1_report_2024.pdf')">
+                                        <i class="ri-refresh-line"></i> Restore
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Archived Section -->
+                        <div class="legacy-section">
+                            <div class="legacy-section-header">
+                                <i class="ri-archive-line" style="color: #ff453a;"></i>
+                                <h3>Archived (Excluded from Search)</h3>
+                                <span class="count">1</span>
+                            </div>
+
+                            <!-- Demo: User Archived Document -->
+                            <div class="legacy-doc">
+                                <div class="legacy-doc-icon archived">
+                                    <i class="ri-file-pdf-line"></i>
+                                </div>
+                                <div class="legacy-doc-info">
+                                    <div class="legacy-doc-name">old_branding_guidelines.pdf</div>
+                                    <div class="legacy-doc-meta">Archived: Jan 15, 2024</div>
+                                </div>
+                                <span class="legacy-doc-reason">User archived</span>
+                                <div class="legacy-doc-actions">
+                                    <button class="legacy-btn restore"
+                                        onclick="restoreDoc('old_branding_guidelines.pdf')">
+                                        <i class="ri-refresh-line"></i> Restore
+                                    </button>
+                                    <button class="legacy-btn delete"
+                                        onclick="deleteDoc('old_branding_guidelines.pdf')">
+                                        <i class="ri-delete-bin-line"></i> Delete
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script src="neurons.js"></script>
+    <script src="popup.js"></script>
+    <link rel="stylesheet" href="popup.css">
+
+    <script>
+        async function restoreDoc(filename) {
+            // TODO: Call /api/documents/{id}/restore
+            console.log('Restoring:', filename);
+            Popup.success(`${filename} restored to active documents.`);
+            // For demo, just remove the element
+            event.target.closest('.legacy-doc').remove();
+        }
+
+        async function deleteDoc(filename) {
+            Popup.confirm({
+                title: 'Delete Document?',
+                message: `"${filename}" will be permanently deleted. This cannot be undone.`,
+                confirmLabel: 'Delete',
+                onConfirm: async () => {
+                    // TODO: Call /api/documents/{id}/delete
+                    console.log('Deleting:', filename);
+                    event.target.closest('.legacy-doc').remove();
+                }
+            });
+        }
+
+        // Load actual legacy documents from API
+        async function loadLegacyDocuments() {
+            try {
+                const response = await fetch('/api/documents/legacy');
+                if (response.ok) {
+                    const data = await response.json();
+                    // TODO: Render real documents, for now we show demo data
+                    console.log('Legacy docs:', data);
+                }
+            } catch (e) {
+                console.log('Using demo data (API not available)');
+            }
+        }
+
+        loadLegacyDocuments();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item active" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+
+            <div class="dock-divider"></div>
+
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <section id="widgets" class="page active" style="display: block;">
+            <header style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <h1>Widgets</h1>
+                    <div class="team-stack" title="Team Online">
+                        <div class="avatar" style="background-color: #FF5733;">SC</div>
+                        <div class="avatar" style="background-color: #33FF57;">JD</div>
+                        <div class="avatar" style="background-color: #3357FF;">MK</div>
+                    </div>
+                </div>
+                <button id="auto-arrange-btn" class="dock-item"
+                    style="border: 1px solid var(--dock-border); border-radius: 8px; font-size: 14px; padding: 8px 16px; background: var(--bg-surface);">
+                    <i class="ri-layout-grid-fill" style="margin-right: 8px;"></i> Auto Arrange
+                </button>
+            </header>
+            <div class="page-content">
+                <div class="widget-grid" id="widget-grid">
+                    <!-- B2B Real Estate Widgets -->
+
+                    <!-- 1. Active Listings (1x1) -->
+                    <div class="widget w-1x1" draggable="true" id="w-listings">
+                        <i class="ri-home-4-line"
+                            style="font-size: 28px; margin-bottom: 8px; color: var(--accent);"></i>
+                        <h3 style="font-size: 14px;">Active Listings</h3>
+                        <p class="live-num" data-base="42" style="font-size: 32px;">42</p>
+                    </div>
+
+                    <!-- 2. Revenue YTD (2x1) -->
+                    <div class="widget w-2x1" draggable="true" id="w-revenue">
+                        <div
+                            style="width: 100%; display: flex; justify-content: space-between; align-items: flex-start;">
+                            <div>
+                                <h3>Revenue YTD</h3>
+                                <p class="live-currency" data-base="1250000" style="font-size: 28px;">$1.25M</p>
+                            </div>
+                            <span
+                                style="color: #32d74b; font-size: 14px; background: rgba(50, 215, 75, 0.15); padding: 4px 8px; border-radius: 6px;">+12%</span>
+                        </div>
+                        <!-- Mini Simulation Chart -->
+                        <div class="chart-mini"
+                            style="width: 100%; height: 40px; margin-top: 10px; display: flex; align-items: flex-end; gap: 4px;">
+                            <!-- Bars injected by JS -->
+                        </div>
+                    </div>
+
+                    <!-- 3. New Leads (1x1) -->
+                    <div class="widget w-1x1" draggable="true" id="w-leads">
+                        <i class="ri-user-follow-line" style="font-size: 28px; margin-bottom: 8px; color: #ff9f0a;"></i>
+                        <h3 style="font-size: 14px;">New Leads</h3>
+                        <p class="live-num" data-base="18" style="font-size: 32px;">18</p>
+                    </div>
+
+                    <!-- 4. Sales Pipeline (2x2) -->
+                    <div class="widget w-2x2" draggable="true" id="w-pipeline">
+                        <h3 style="align-self: flex-start;">Pipeline Stages</h3>
+                        <div
+                            style="width: 100%; flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 12px; margin-top: 8px;">
+                            <div class="pipeline-item">
+                                <span
+                                    style="font-size: 12px; display:flex; justify-content:space-between;"><span>New</span>
+                                    <span class="live-num">24</span></span>
+                                <div
+                                    style="height: 6px; background: var(--dock-border); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 80%; background: #0a84ff; height: 100%;"></div>
+                                </div>
+                            </div>
+                            <div class="pipeline-item">
+                                <span
+                                    style="font-size: 12px; display:flex; justify-content:space-between;"><span>Viewing</span>
+                                    <span class="live-num">12</span></span>
+                                <div
+                                    style="height: 6px; background: var(--dock-border); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 50%; background: #bf5af2; height: 100%;"></div>
+                                </div>
+                            </div>
+                            <div class="pipeline-item">
+                                <span
+                                    style="font-size: 12px; display:flex; justify-content:space-between;"><span>Offer</span>
+                                    <span class="live-num">5</span></span>
+                                <div
+                                    style="height: 6px; background: var(--dock-border); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 25%; background: #ff9f0a; height: 100%;"></div>
+                                </div>
+                            </div>
+                            <div class="pipeline-item">
+                                <span
+                                    style="font-size: 12px; display:flex; justify-content:space-between;"><span>Closing</span>
+                                    <span class="live-num">2</span></span>
+                                <div
+                                    style="height: 6px; background: var(--dock-border); border-radius: 3px; overflow: hidden;">
+                                    <div style="width: 10%; background: #32d74b; height: 100%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- NEW 7. Market Heatmap (2x3) -->
+                    <div class="widget w-2x3" draggable="true" id="w-heatmap">
+                        <h3 style="margin-bottom: 12px;">Market Heatmap</h3>
+                        <div style="flex: 1; width: 100%; border-radius: 12px; overflow: hidden; position: relative;">
+                            <!-- Mock Map Base -->
+                            <div style="width: 100%; height: 100%; background: #2c2c2e; position: relative;">
+                                <!-- Grid lines -->
+                                <div
+                                    style="position: absolute; width: 100%; height: 100%; background-image: radial-gradient(rgba(255,255,255,0.1) 1px, transparent 1px); background-size: 20px 20px;">
+                                </div>
+
+                                <!-- Heat Spots -->
+                                <div
+                                    style="position: absolute; top: 30%; left: 40%; width: 80px; height: 80px; background: radial-gradient(circle, rgba(255, 59, 48, 0.6) 0%, transparent 70%); border-radius: 50%;">
+                                </div>
+                                <div
+                                    style="position: absolute; top: 60%; left: 70%; width: 60px; height: 60px; background: radial-gradient(circle, rgba(50, 215, 75, 0.6) 0%, transparent 70%); border-radius: 50%;">
+                                </div>
+                                <div
+                                    style="position: absolute; top: 20%; left: 20%; width: 100px; height: 100px; background: radial-gradient(circle, rgba(10, 132, 255, 0.6) 0%, transparent 70%); border-radius: 50%;">
+                                </div>
+
+                                <!-- Labels -->
+                                <span
+                                    style="position: absolute; top: 35%; left: 42%; font-size: 10px; font-weight: 600; color: white; text-shadow: 0 1px 2px black;">High
+                                    Demand</span>
+                                <span
+                                    style="position: absolute; top: 65%; left: 72%; font-size: 10px; font-weight: 600; color: white; text-shadow: 0 1px 2px black;">New
+                                    Dev</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 5. Avg. Market Days (1x1) -->
+                    <div class="widget w-1x1" draggable="true" id="w-marketdays">
+                        <i class="ri-time-line" style="font-size: 28px; margin-bottom: 8px;"></i>
+                        <h3 style="font-size: 14px;">Avg. DOM</h3>
+                        <p class="live-num" data-base="34" style="font-size: 32px;">34</p>
+                    </div>
+
+                    <!-- 6. Recent Sales (1x2) -->
+                    <div class="widget w-1x2" draggable="true" id="w-sales">
+                        <h3 style="align-self: flex-start; margin-bottom: 16px;">Recent Sales</h3>
+                        <div style="width: 100%; display: flex; flex-direction: column; gap: 12px;">
+                            <div class="sale-item" style="display: flex; gap: 8px; align-items: center;">
+                                <div
+                                    style="width: 32px; height: 32px; background: var(--dock-border); border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ri-home-line" style="font-size: 16px;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 600;">102 Maple Dr</div>
+                                    <div style="font-size: 10px; color: var(--accent);">$450k</div>
+                                </div>
+                            </div>
+                            <div class="sale-item" style="display: flex; gap: 8px; align-items: center;">
+                                <div
+                                    style="width: 32px; height: 32px; background: var(--dock-border); border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ri-building-line" style="font-size: 16px;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 600;">Azure Apt 4</div>
+                                    <div style="font-size: 10px; color: var(--accent);">$320k</div>
+                                </div>
+                            </div>
+                            <div class="sale-item" style="display: flex; gap: 8px; align-items: center;">
+                                <div
+                                    style="width: 32px; height: 32px; background: var(--dock-border); border-radius: 6px; display:flex; align-items:center; justify-content:center;">
+                                    <i class="ri-store-line" style="font-size: 16px;"></i>
+                                </div>
+                                <div>
+                                    <div style="font-size: 12px; font-weight: 600;">Local Shop</div>
+                                    <div style="font-size: 10px; color: var(--accent);">$850k</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <button id="add-widget-btn" class="fab" title="Add Widget">
+        <i class="ri-add-line"></i>
+    </button>
+
+    <div id="ai-modal-overlay" class="modal-overlay">
+        <div class="ai-modal">
+            <div class="ai-header">
+                <button class="close-btn"><i class="ri-close-line"></i></button>
+                <h2>Create Widget</h2>
+                <button class="ai-generate-btn">
+                    <i class="ri-magic-line"></i> Generate
+                </button>
+            </div>
+            <!-- Description removed for compact chatbar feel -->
+            <div class="ai-actions">
+                <textarea placeholder="e.g., A line chart showing web traffic for the last 30 days..."
+                    class="ai-input"></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script src="widgets.js"></script>
+</body>
+
+</html>

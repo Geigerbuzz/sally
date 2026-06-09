@@ -86,7 +86,7 @@
           options:{ responsive:true, maintainAspectRatio:false, cutout:"68%",
             plugins:{ legend:{ display:true, position:"bottom",
               labels:{ boxWidth:8, boxHeight:8, usePointStyle:true, pointStyle:"circle", padding:12,
-                color:css("--text-secondary"), font:{family:"'Inter',sans-serif", size:11} } } } } });
+                color:css("--text-secondary"), font:{family:"'Helvetica Neue',Helvetica,Arial,sans-serif", size:11} } } } } });
         return;
       }
 

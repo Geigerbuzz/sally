@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Sessions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item active" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <section id="sessions" class="page active" style="display: block;">
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <h1>Sessions</h1>
+                </header>
+                <div class="page-content">
+                    <!-- Sessions Grid -->
+                    <div id="sessions-grid" class="sessions-grid">
+                        <!-- Session cards will be populated by JS -->
+                        <div class="session-empty-state" id="empty-state">
+                            <i class="ri-chat-3-line"></i>
+                            <p>No sessions yet</p>
+                            <p class="text-secondary">Start a new conversation using the + button</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- FAB: New Session -->
+    <!-- FAB: New Session -->
+    <button class="fab" id="new-session-fab" title="New Session">
+        <i class="ri-add-line"></i>
+    </button>
+
+    <!-- New Session Modal -->
+    <!-- New Session Modal (Exact replica of Widget Creator) -->
+    <div id="new-session-modal" class="modal-overlay">
+        <div class="ai-modal">
+            <div class="ai-header">
+                <button class="close-btn" id="close-session-modal"><i class="ri-close-line"></i></button>
+                <h2>New Session</h2>
+                <button class="ai-generate-btn" id="start-session-btn">
+                    <i class="ri-chat-new-line"></i> Start
+                </button>
+            </div>
+            <div class="ai-actions">
+                <textarea id="session-prompt" class="ai-input"
+                    placeholder="Ask a question to start a new session..."></textarea>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Sessions Management
+        const sessionsGrid = document.getElementById('sessions-grid');
+        const emptyState = document.getElementById('empty-state');
+        const newSessionFab = document.getElementById('new-session-fab');
+        const newSessionModal = document.getElementById('new-session-modal');
+        const closeModalBtn = document.getElementById('close-session-modal');
+        const sessionPrompt = document.getElementById('session-prompt');
+        const startSessionBtn = document.getElementById('start-session-btn');
+
+        // Load sessions from localStorage
+        function loadSessions() {
+            const sessions = JSON.parse(localStorage.getItem('chatSessions') || '[]');
+
+            // Clear grid except empty state
+            sessionsGrid.innerHTML = '';
+
+            if (sessions.length === 0) {
+                sessionsGrid.appendChild(createEmptyState());
+                return;
+            }
+
+            // Sort by last updated (most recent first)
+            sessions.sort((a, b) => new Date(b.updatedAt) - new Date(a.updatedAt));
+
+            sessions.forEach(session => {
+                const card = createSessionCard(session);
+                sessionsGrid.appendChild(card);
+            });
+        }
+
+        function createEmptyState() {
+            const div = document.createElement('div');
+            div.className = 'session-empty-state';
+            div.id = 'empty-state';
+            div.innerHTML = `
+                <i class="ri-chat-3-line"></i>
+                <p>No sessions yet</p>
+                <p class="text-secondary">Start a new conversation using the + button</p>
+            `;
+            return div;
+        }
+
+        function createSessionCard(session) {
+            const card = document.createElement('div');
+            card.className = 'widget session-card w-1x1';
+            card.onclick = () => openSession(session.id);
+
+            // Format date
+            const date = new Date(session.updatedAt);
+            const timeAgo = getTimeAgo(date);
+
+            // Get message count
+            const msgCount = session.messages ? session.messages.length : 0;
+
+            card.innerHTML = `
+                <div class="session-card-icon">
+                    <i class="ri-chat-3-line"></i>
+                </div>
+                <h3 class="session-card-title">${escapeHtml(session.title)}</h3>
+                <div class="session-card-meta">
+                    <span>${msgCount} messages</span>
+                    <span>•</span>
+                    <span>${timeAgo}</span>
+                </div>
+                <button class="session-delete-btn" onclick="deleteSession(event, '${session.id}')" title="Delete">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            `;
+
+            return card;
+        }
+
+        function getTimeAgo(date) {
+            const seconds = Math.floor((new Date() - date) / 1000);
+            if (seconds < 60) return 'Just now';
+            if (seconds < 3600) return Math.floor(seconds / 60) + 'm ago';
+            if (seconds < 86400) return Math.floor(seconds / 3600) + 'h ago';
+            if (seconds < 604800) return Math.floor(seconds / 86400) + 'd ago';
+            return date.toLocaleDateString();
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function openSession(sessionId) {
+            window.location.href = `chat.html?session=${sessionId}`;
+        }
+
+        function deleteSession(event, sessionId) {
+            event.stopPropagation();
+            if (!confirm('Delete this session?')) return;
+
+            let sessions = JSON.parse(localStorage.getItem('chatSessions') || '[]');
+            sessions = sessions.filter(s => s.id !== sessionId);
+            localStorage.setItem('chatSessions', JSON.stringify(sessions));
+            loadSessions();
+        }
+
+        // New session modal logic
+        if (newSessionFab) {
+            newSessionFab.addEventListener('click', () => {
+                newSessionModal.classList.add('active');
+                sessionPrompt.focus();
+            });
+        }
+
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => {
+                newSessionModal.classList.remove('active');
+                sessionPrompt.value = '';
+            });
+        }
+
+        if (newSessionModal) {
+            newSessionModal.addEventListener('click', (e) => {
+                if (e.target === newSessionModal) {
+                    newSessionModal.classList.remove('active');
+                    sessionPrompt.value = '';
+                }
+            });
+        }
+
+        if (startSessionBtn) startSessionBtn.addEventListener('click', startNewSession);
+
+        if (sessionPrompt) {
+            sessionPrompt.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    startNewSession();
+                }
+            });
+
+            // Auto-resize textarea (match widget generator behavior)
+            sessionPrompt.addEventListener('input', function () {
+                this.style.height = 'auto';
+                this.style.height = (this.scrollHeight) + 'px';
+            });
+        }
+
+        async function startNewSession() {
+            const prompt = sessionPrompt.value.trim();
+            if (!prompt) return;
+
+            // UX: Loading state
+            if (startSessionBtn) {
+                const originalText = startSessionBtn.innerHTML;
+                startSessionBtn.innerHTML = '<i class="ri-loader-4-line ri-spin"></i> Creating...';
+                startSessionBtn.disabled = true;
+            }
+
+            // Create new session ID
+            const sessionId = 'session_' + Date.now();
+
+            // Default title fallback
+            let title = prompt.length > 40 ? prompt.substring(0, 40) + '...' : prompt;
+
+            // Generate Smart Title via Backend
+            try {
+                const response = await fetch('/api/generate-title', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ prompt: prompt })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.title) {
+                        title = data.title;
+                    }
+                }
+            } catch (e) {
+                console.error("Title generation failed, using fallback", e);
+            }
+
+            const newSession = {
+                id: sessionId,
+                title: title,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                messages: [],
+                initialPrompt: prompt
+            };
+
+            // Save to localStorage
+            let sessions = JSON.parse(localStorage.getItem('chatSessions') || '[]');
+            sessions.push(newSession);
+            localStorage.setItem('chatSessions', JSON.stringify(sessions));
+
+            // Navigate to chat with the initial prompt
+            window.location.href = `chat.html?session=${sessionId}&initial=${encodeURIComponent(prompt)}`;
+        }
+
+        // Initial load
+        loadSessions();
+    </script>
+</body>
+
+</html>

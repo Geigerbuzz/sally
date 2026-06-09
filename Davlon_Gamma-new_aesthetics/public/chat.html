@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Chat</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item active" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <section id="chat" class="page active" style="display: flex; flex-direction: column; height: 100%;">
+            <header
+                style="display: flex; justify-content: space-between; align-items: center; position: relative; z-index: 1;">
+                <div style="display: flex; align-items: center; gap: 16px;">
+                    <h1 id="session-title">Chat</h1>
+                </div>
+            </header>
+            <div class="page-content"
+                style="position: relative; z-index: 1; flex: 1; display: flex; flex-direction: column; overflow: hidden;">
+
+                <!-- Chat Container -->
+                <div id="chat-container" class="chat-container">
+                    <!-- Messages will be added here dynamically -->
+                </div>
+
+                <!-- Input Area - Matching Widget Generator Style Exactly -->
+                <!-- Input Area - Exact Copy of Widget Creator (repositioned) -->
+                <div class="ai-modal active"
+                    style="position: absolute; top: auto; bottom: 20px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 600px; z-index: 10; opacity: 1; pointer-events: auto;">
+                    <div class="ai-header">
+                        <a href="sessions.html" class="close-btn" title="Back to Sessions"><i
+                                class="ri-arrow-left-line"></i></a>
+                        <h2>Ask a question</h2>
+                        <button id="chat-send-btn" class="ai-generate-btn">
+                            <i class="ri-send-plane-fill"></i> Send
+                        </button>
+                    </div>
+                    <div class="ai-actions">
+                        <textarea id="chat-input" class="ai-input"
+                            placeholder="Ask a question about your files..."></textarea>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <!-- Document Preview Modal -->
+    <div id="doc-preview-modal" class="modal-overlay">
+        <div class="ai-modal doc-modal" style="height: 80vh; max-width: 800px;">
+            <div class="ai-header">
+                <button class="close-btn" onclick="closeDocPreview()"><i class="ri-close-line"></i></button>
+                <h2 id="doc-preview-title">Document Preview</h2>
+                <div style="width: 20px;"></div>
+            </div>
+            <div id="doc-preview-content"
+                style="flex: 1; overflow-y: auto; background: rgba(0,0,0,0.2); border-radius: 8px; padding: 20px; font-family: monospace; white-space: pre-wrap;">
+                Loading document content...
+            </div>
+        </div>
+    </div>
+
+    <script src="chat.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Legacy Archives</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets"><i class="ri-dashboard-line"></i></a>
+            <a href="workspace.html" class="dock-item" title="Workspace"><i class="ri-briefcase-line"></i></a>
+            <a href="sessions.html" class="dock-item" title="Sessions"><i class="ri-discuss-line"></i></a>
+            <a href="inbox.html" class="dock-item" title="Inbox"><i class="ri-mail-line"></i></a>
+            <a href="sources.html" class="dock-item active" title="Data Sources"><i class="ri-database-2-line"></i></a>
+            <a href="settings.html" class="dock-item" title="Settings"><i class="ri-settings-line"></i></a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme"><i class="ri-moon-line"></i></button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <section id="sources" class="page active">
+            <canvas id="neural-bg"></canvas>
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <h1>Data & Sources</h1>
+                    <div class="online-team">
+                        <div class="team-bubble" style="background: #9b59b6;" title="Shay">S</div>
+                        <div class="team-bubble" style="background: #3498db;" title="Mark">M</div>
+                        <div class="team-bubble" style="background: #e67e22;" title="Ali">A</div>
+                    </div>
+                </header>
+
+                <!-- Centered Navigation -->
+                <div class="sources-nav">
+                    <a href="sources.html" class="source-tab">Static</a>
+                    <a href="sources_live.html" class="source-tab">Live</a>
+                    <a href="sources_legacy.html" class="source-tab active">Legacy</a>
+                </div>
+
+                <!-- Legacy View Content -->
+                <div class="source-view active">
+                    <div class="card" style="border: 1px dashed var(--dock-border); background: transparent;">
+                        <h2 style="color: var(--text-secondary);"><i class="ri-archive-line"></i> Archived Data</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9em;">
+                            Data here is excluded from AI answers unless explicitly requested.
+                        </p>
+
+                        <div class="sources-list text-section">
+                            <ul>
+                                <li style="opacity: 0.6;">
+                                    <span class="status-dot expired"
+                                        style="background: var(--text-secondary); box-shadow: none;"></span>
+                                    Q1_2023_Financials.pdf
+                                    <span class="meta">Expired (Jan 2024)</span>
+                                </li>
+                                <li style="opacity: 0.6;">
+                                    <span class="status-dot expired"
+                                        style="background: var(--text-secondary); box-shadow: none;"></span>
+                                    Old_Listing_Agreements_2022.zip
+                                    <span class="meta">Archived (Auto)</span>
+                                </li>
+                                <li style="opacity: 0.6;">
+                                    <span class="status-dot expired"
+                                        style="background: var(--text-secondary); box-shadow: none;"></span>
+                                    Former_Agent_Roster.csv
+                                    <span class="meta">Deleted</span>
+                                </li>
+                            </ul>
+                            <div style="margin-top: 20px; text-align: center;">
+                                <button class="btn-primary"
+                                    style="background: transparent; border: 1px solid var(--dock-border);">Load More
+                                    Archives</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+    <script src="script.js"></script>
+    <script src="neurons.js"></script>
+</body>
+
+</html>

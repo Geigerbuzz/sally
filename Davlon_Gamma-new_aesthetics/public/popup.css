@@ -1,0 +1,243 @@
+/**
+ * Universal Popup Styles
+ * Works on both mobile and desktop
+ */
+
+/* Container & Overlay */
+#popup-container {
+    position: fixed;
+    inset: 0;
+    z-index: 10000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.2s ease, visibility 0.2s ease;
+}
+
+#popup-container.popup-visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.popup-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+}
+
+/* Popup Box */
+.popup-box {
+    position: relative;
+    background: var(--bg-secondary, #1c1c1e);
+    border-radius: 16px;
+    padding: 28px 24px 20px;
+    max-width: 360px;
+    width: calc(100% - 40px);
+    text-align: center;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
+    transform: scale(0.9) translateY(20px);
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+#popup-container.popup-visible .popup-box {
+    transform: scale(1) translateY(0);
+}
+
+/* Icon */
+.popup-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+    font-weight: 600;
+}
+
+/* Type-specific colors */
+.popup-error .popup-icon {
+    background: rgba(255, 69, 58, 0.15);
+    color: #ff453a;
+}
+
+.popup-success .popup-icon {
+    background: rgba(48, 209, 88, 0.15);
+    color: #30d158;
+}
+
+.popup-warning .popup-icon {
+    background: rgba(255, 159, 10, 0.15);
+    color: #ff9f0a;
+}
+
+.popup-info .popup-icon {
+    background: rgba(10, 132, 255, 0.15);
+    color: #0a84ff;
+}
+
+.popup-confirm .popup-icon {
+    background: rgba(175, 82, 222, 0.15);
+    color: #af52de;
+}
+
+/* Title */
+.popup-title {
+    margin: 0 0 8px;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text-primary, #fff);
+}
+
+/* Message */
+.popup-message {
+    margin: 0 0 20px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--text-secondary, #8e8e93);
+}
+
+/* Actions */
+.popup-actions {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+}
+
+.popup-btn {
+    flex: 1;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.1s ease, opacity 0.15s ease;
+    background: var(--bg-tertiary, #2c2c2e);
+    color: var(--text-primary, #fff);
+}
+
+.popup-btn:hover {
+    opacity: 0.85;
+}
+
+.popup-btn:active {
+    transform: scale(0.97);
+}
+
+.popup-btn-primary {
+    background: #0a84ff;
+    color: #fff;
+}
+
+.popup-error .popup-btn-primary {
+    background: #ff453a;
+}
+
+.popup-success .popup-btn-primary {
+    background: #30d158;
+}
+
+.popup-warning .popup-btn-primary {
+    background: #ff9f0a;
+}
+
+/* Mobile Optimizations */
+@media (max-width: 480px) {
+    .popup-box {
+        padding: 24px 20px 16px;
+        border-radius: 20px;
+    }
+
+    .popup-actions {
+        flex-direction: column;
+    }
+
+    .popup-btn {
+        padding: 14px 20px;
+    }
+}
+
+/* Light mode support */
+@media (prefers-color-scheme: light) {
+    .popup-box {
+        background: #fff;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+    }
+
+    .popup-title {
+        color: #1c1c1e;
+    }
+
+    .popup-message {
+        color: #6e6e73;
+    }
+
+    .popup-btn {
+        background: #f2f2f7;
+        color: #1c1c1e;
+    }
+
+    .popup-report-input {
+        background: #f2f2f7;
+        color: #1c1c1e;
+    }
+}
+
+/* Error Report Form */
+.popup-report-form {
+    margin-bottom: 16px;
+    text-align: left;
+}
+
+.popup-report-label {
+    font-size: 13px;
+    color: var(--text-secondary, #8e8e93);
+    margin: 0 0 8px;
+}
+
+.popup-report-input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    background: var(--bg-tertiary, #2c2c2e);
+    color: var(--text-primary, #fff);
+    font-size: 14px;
+    font-family: inherit;
+    resize: none;
+    box-sizing: border-box;
+}
+
+.popup-report-input:focus {
+    outline: none;
+    border-color: #0a84ff;
+}
+
+.popup-report-input.popup-input-error {
+    border-color: #ff453a;
+    animation: shake 0.3s ease;
+}
+
+@keyframes shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    20%,
+    60% {
+        transform: translateX(-4px);
+    }
+
+    40%,
+    80% {
+        transform: translateX(4px);
+    }
+}

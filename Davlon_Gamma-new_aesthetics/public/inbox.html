@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Inbox</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item active" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <section id="inbox" class="page active" style="display: block;">
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <h1>Inbox</h1>
+                </header>
+                <div class="page-content">
+                    <div class="card inbox-container">
+                        <p style="color: var(--text-secondary);">No new messages.</p>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+    <script>
+        // Demo messages - remove after testing
+        const demoMessages = [
+            {
+                id: 'demo-legacy-1',
+                subject: '📄 Document Review Needed',
+                body: 'I\'m not sure whether "Q3_draft_memo.pdf" should remain active or be moved to legacy.\n\nPermanence score: 35%\nDocument type: memo\n\nWould you like to keep it active or archive it?',
+                type: 'legacy_archival',
+                timestamp: new Date().toISOString(),
+                read: false,
+                metadata: { doc_id: 'demo-123', filename: 'Q3_draft_memo.pdf', permanence: 0.35 },
+                actions: [
+                    { id: 'keep_active', label: 'Keep Active' },
+                    { id: 'archive', label: 'Move to Legacy' }
+                ]
+            }
+        ];
+
+        async function loadInbox() {
+            try {
+                const response = await fetch('/api/inbox');
+                let messages = [];
+
+                if (response.ok) {
+                    const data = await response.json();
+                    messages = data.messages || [];
+                }
+
+                // Add demo messages for testing
+                messages = [...demoMessages, ...messages];
+
+                const container = document.querySelector('.card');
+
+                if (messages.length > 0) {
+                    container.innerHTML = '';
+
+                    messages.forEach(msg => {
+                        const msgData = msg.m || msg;
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = 'message-item';
+                        msgDiv.id = `msg-${msgData.id}`;
+
+                        // Parse actions if they're a string
+                        let actions = msgData.actions;
+                        if (typeof actions === 'string') {
+                            try { actions = JSON.parse(actions); } catch (e) { actions = []; }
+                        }
+
+                        // Check if it's a legacy archival or knowledge gap alert
+                        if (msgData.type === 'legacy_archival') {
+                            msgDiv.className += ' inbox-legacy';
+                            const formattedBody = msgData.body.replace(/\n/g, '<br>');
+
+                            msgDiv.innerHTML = `
+                                <div class="inbox-msg-header">
+                                    <div class="inbox-msg-icon legacy">
+                                        <i class="ri-file-warning-line"></i>
+                                    </div>
+                                    <div class="inbox-msg-title">
+                                        <strong>${msgData.subject}</strong>
+                                        <span class="inbox-msg-time">${formatTime(msgData.timestamp)}</span>
+                                    </div>
+                                </div>
+                                <p class="inbox-msg-body">${formattedBody}</p>
+                                <div class="inbox-msg-actions">
+                                    ${actions ? actions.map(action => `
+                                        <button 
+                                            class="inbox-action-btn ${action.id === 'archive' ? 'secondary' : ''}" 
+                                            onclick="handleInboxAction('${msgData.id}', '${action.id}')"
+                                        >${action.label}</button>
+                                    `).join('') : ''}
+                                </div>
+                            `;
+                        } else if (msgData.type === 'knowledge_gap') {
+                            msgDiv.className += ' inbox-knowledge-gap';
+                            const formattedBody = msgData.body.replace(/\n/g, '<br>');
+
+                            msgDiv.innerHTML = `
+                                <div class="inbox-msg-header">
+                                    <div class="inbox-msg-icon knowledge">
+                                        <i class="ri-lightbulb-line"></i>
+                                    </div>
+                                    <div class="inbox-msg-title">
+                                        <strong>${msgData.subject}</strong>
+                                        <span class="inbox-msg-time">${formatTime(msgData.timestamp)}</span>
+                                    </div>
+                                </div>
+                                <p class="inbox-msg-body">${formattedBody}</p>
+                                <div class="inbox-msg-actions">
+                                    ${actions ? actions.map(action => `
+                                        <button 
+                                            class="inbox-action-btn ${action.id === 'ignore' ? 'secondary' : ''}" 
+                                            onclick="handleInboxAction('${msgData.id}', '${action.id}')"
+                                        >${action.label}</button>
+                                    `).join('') : ''}
+                                </div>
+                            `;
+                        } else if (msgData.type === 'category_merge_suggestion') {
+                            // Category merge suggestion
+                            msgDiv.className += ' inbox-category-merge';
+                            const formattedBody = msgData.body.replace(/\n/g, '<br>');
+
+                            // Parse metadata
+                            let metadata = msgData.metadata;
+                            if (typeof metadata === 'string') {
+                                try { metadata = JSON.parse(metadata); } catch (e) { metadata = {}; }
+                            }
+
+                            msgDiv.innerHTML = `
+                                <div class="inbox-msg-header">
+                                    <div class="inbox-msg-icon category">
+                                        <i class="ri-git-merge-line"></i>
+                                    </div>
+                                    <div class="inbox-msg-title">
+                                        <strong>${msgData.subject}</strong>
+                                        <span class="inbox-msg-time">${formatTime(msgData.timestamp)}</span>
+                                    </div>
+                                </div>
+                                <p class="inbox-msg-body">${formattedBody}</p>
+                                <div class="inbox-msg-actions">
+                                    <button 
+                                        class="inbox-action-btn" 
+                                        onclick="handleCategoryAction('${msgData.id}', 'merge', ${JSON.stringify(metadata).replace(/"/g, '&quot;')})"
+                                    ><i class="ri-git-merge-line"></i> Merge categories</button>
+                                    <button 
+                                        class="inbox-action-btn secondary" 
+                                        onclick="handleCategoryAction('${msgData.id}', 'link', ${JSON.stringify(metadata).replace(/"/g, '&quot;')})"
+                                    ><i class="ri-link"></i> Link as related</button>
+                                    <button 
+                                        class="inbox-action-btn secondary" 
+                                        onclick="handleCategoryAction('${msgData.id}', 'ignore', ${JSON.stringify(metadata).replace(/"/g, '&quot;')})"
+                                    ><i class="ri-close-line"></i> Ignore</button>
+                                </div>
+                            `;
+                        } else {
+                            // Regular message
+                            msgDiv.innerHTML = `
+                                <div class="inbox-msg-header">
+                                    <div class="inbox-msg-icon">
+                                        <i class="ri-mail-line"></i>
+                                    </div>
+                                    <div class="inbox-msg-title">
+                                        <strong>${msgData.subject || 'Message'}</strong>
+                                        <span class="inbox-msg-time">${formatTime(msgData.timestamp)}</span>
+                                    </div>
+                                </div>
+                                <p class="inbox-msg-body">${msgData.body || ''}</p>
+                            `;
+                        }
+                        container.appendChild(msgDiv);
+                    });
+                } else {
+                    container.innerHTML = `
+                        <div class="inbox-empty">
+                            <i class="ri-inbox-line"></i>
+                            <p>No new messages</p>
+                        </div>
+                    `;
+                }
+            } catch (e) {
+                console.error("Failed to load inbox:", e);
+            }
+        }
+
+        function formatTime(timestamp) {
+            if (!timestamp) return '';
+            const date = new Date(timestamp);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+
+            if (diffMins < 1) return 'Just now';
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
+            return date.toLocaleDateString();
+        }
+
+        async function handleInboxAction(messageId, action) {
+            try {
+                const btn = event.target;
+                btn.disabled = true;
+                btn.textContent = 'Processing...';
+
+                // Skip API call for demo messages
+                if (!messageId.startsWith('demo-')) {
+                    const response = await fetch('/api/inbox/action', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message_id: messageId, action: action })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('API failed');
+                    }
+                }
+
+                const msgElement = document.getElementById(`msg-${messageId}`);
+                if (msgElement) {
+                    msgElement.style.animation = 'fadeOut 0.3s ease forwards';
+                    setTimeout(() => {
+                        msgElement.remove();
+                        // Check if no messages left
+                        const container = document.querySelector('.card');
+                        if (container.querySelectorAll('.message-item').length === 0) {
+                            container.innerHTML = `
+                                <div class="inbox-empty">
+                                    <i class="ri-inbox-line"></i>
+                                    <p>No new messages</p>
+                                </div>
+                            `;
+                        }
+                    }, 300);
+                }
+            } catch (e) {
+                console.error("Action failed:", e);
+                const btn = event.target;
+                btn.disabled = false;
+                btn.textContent = action === 'keep_active' ? 'Keep Active' : 'Move to Legacy';
+            }
+        }
+
+        async function handleCategoryAction(messageId, action, metadata) {
+            try {
+                const btn = event.target;
+                btn.disabled = true;
+                const originalText = btn.textContent;
+                btn.textContent = 'Processing...';
+
+                const response = await fetch('/api/inbox/action', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        message_id: messageId,
+                        action: action,
+                        metadata: metadata
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('API failed');
+                }
+
+                const result = await response.json();
+
+                const msgElement = document.getElementById(`msg-${messageId}`);
+                if (msgElement) {
+                    // Show success message before removing
+                    const actionText = action === 'merge' ? 'Merged!' : action === 'link' ? 'Linked!' : 'Ignored';
+                    msgElement.innerHTML = `
+                        <div class="inbox-success">
+                            <i class="ri-check-line"></i>
+                            <span>${actionText}</span>
+                        </div>
+                    `;
+
+                    setTimeout(() => {
+                        msgElement.style.animation = 'fadeOut 0.3s ease forwards';
+                        setTimeout(() => {
+                            msgElement.remove();
+                            // Check if no messages left
+                            const container = document.querySelector('.card');
+                            if (container.querySelectorAll('.message-item').length === 0) {
+                                container.innerHTML = `
+                                    <div class="inbox-empty">
+                                        <i class="ri-inbox-line"></i>
+                                        <p>No new messages</p>
+                                    </div>
+                                `;
+                            }
+                        }, 300);
+                    }, 1000);
+                }
+            } catch (e) {
+                console.error("Category action failed:", e);
+                const btn = event.target;
+                btn.disabled = false;
+            }
+        }
+
+        loadInbox();
+    </script>
+    <style>
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+                transform: translateX(0);
+            }
+
+            to {
+                opacity: 0;
+                transform: translateX(20px);
+            }
+        }
+
+        .message-item {
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            background: var(--card-bg);
+            border: 1px solid var(--dock-border);
+        }
+
+        .inbox-legacy {
+            border-left: 3px solid #ff9f0a;
+        }
+
+        .inbox-knowledge-gap {
+            border-left: 3px solid var(--accent);
+        }
+
+        .inbox-msg-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .inbox-msg-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+
+        .inbox-msg-icon.legacy {
+            background: rgba(255, 159, 10, 0.15);
+            color: #ff9f0a;
+        }
+
+        .inbox-msg-icon.knowledge {
+            background: rgba(10, 132, 255, 0.15);
+            color: #0a84ff;
+        }
+
+        .inbox-msg-icon.category {
+            background: rgba(48, 209, 88, 0.15);
+            color: #30d158;
+        }
+
+        .inbox-success {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 20px;
+            color: #30d158;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .inbox-success i {
+            font-size: 24px;
+        }
+
+        .inbox-msg-title {
+            flex: 1;
+        }
+
+        .inbox-msg-title strong {
+            display: block;
+            font-size: 15px;
+            margin-bottom: 4px;
+        }
+
+        .inbox-msg-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .inbox-msg-body {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-primary);
+            margin: 0 0 16px;
+        }
+
+        .inbox-msg-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .inbox-action-btn {
+            padding: 10px 18px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            background: var(--accent);
+            color: white;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+
+        .inbox-action-btn.secondary {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+            border: 1px solid var(--dock-border);
+        }
+
+        .inbox-action-btn:hover {
+            opacity: 0.9;
+            transform: translateY(-1px);
+        }
+
+        .inbox-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .inbox-empty {
+            text-align: center;
+            padding: 48px 24px;
+            color: var(--text-secondary);
+        }
+
+        .inbox-empty i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+    </style>
+</body>
+
+</html>

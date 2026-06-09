@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Davlon Beta - Settings</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="sound_manager.js"></script>
+</head>
+
+<body>
+    <nav id="dock" class="floating-dock">
+        <div class="dock-content">
+            <a href="index.html" class="dock-item" title="Widgets">
+                <i class="ri-dashboard-line"></i>
+            </a>
+            <a href="workspace.html" class="dock-item" title="Workspace">
+                <i class="ri-briefcase-line"></i>
+            </a>
+            <a href="sessions.html" class="dock-item" title="Sessions">
+                <i class="ri-discuss-line"></i>
+            </a>
+            <a href="inbox.html" class="dock-item" title="Inbox">
+                <i class="ri-mail-line"></i>
+            </a>
+            <a href="sources.html" class="dock-item" title="Data Sources">
+                <i class="ri-database-2-line"></i>
+            </a>
+            <a href="settings.html" class="dock-item active" title="Settings">
+                <i class="ri-settings-line"></i>
+            </a>
+            <div class="dock-divider"></div>
+            <button class="dock-item" id="theme-toggle" title="Toggle Theme">
+                <i class="ri-moon-line"></i>
+            </button>
+        </div>
+    </nav>
+
+    <main id="content">
+        <section id="settings" class="page active" style="display: block;">
+            <div class="content-wrapper">
+                <header class="page-header">
+                    <h1>Settings</h1>
+                </header>
+                <div class="page-content">
+                    <div class="card">
+                        <h2>Appearance</h2>
+                        <div class="setting-item">
+                            <label for="theme-toggle-setting">Dark Mode</label>
+                            <input type="checkbox" id="theme-toggle-setting" checked>
+                        </div>
+                        <div class="setting-item desktop-only-setting">
+                            <label for="dock-pos-toggle">Dock on Right (Desktop)</label>
+                            <input type="checkbox" id="dock-pos-toggle">
+                        </div>
+                        <div class="setting-item">
+                            <label for="sound-toggle-setting">Sound Effects</label>
+                            <input type="checkbox" id="sound-toggle-setting" checked>
+                        </div>
+                        <div class="setting-item mobile-only-setting">
+                            <label for="dock-mobile-pos-toggle">Dock at Top (Mobile)</label>
+                            <input type="checkbox" id="dock-mobile-pos-toggle">
+                        </div>
+                    </div>
+                    <div class="card">
+                        <h2>Account</h2>
+                        <p>User Settings</p>
+                    </div>
+                </div>
+            </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+
+</html>
