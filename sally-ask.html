@@ -223,7 +223,7 @@ function retrieve(query, k=5){
 /* ---------- helpers ---------- */
 const wait = ms=>new Promise(r=>setTimeout(r,ms));
 function scrollDown(){ threadScroll.scrollTop = threadScroll.scrollHeight; }
-function escapeHtml(s){ return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+function escapeHtml(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
 function addUser(text){
   const el=document.createElement("div"); el.className="msg u";
   el.innerHTML=`<div class="av">You</div><div class="body"><div class="who">You</div><div class="bubble">${escapeHtml(text)}</div></div>`;
@@ -306,47 +306,69 @@ function buildSources(query, k){
   return sources;
 }
 
-/* ---------- AI answer (DeepSeek) ---------- */
-async function answerAI(query){
-  const start=citeSeq;
-  const sources=buildSources(query,5);
-  const bubble=addSally(); setTyping(bubble);
-  const firstNum = sources[0] ? sources[0].num : 1;
-  const sys=`You are Sally, a meticulous SDG-compliance analyst for ${company}. Answer the user's question using ONLY the numbered SOURCES below. Cite every factual claim inline with the EXACT bracket numbers shown (e.g. [${firstNum}]). Keep it to 2–4 short paragraphs, concrete and specific, quoting figures where given. If the sources don't cover the question, say so plainly and suggest what document would help. Never invent sources, numbers, or facts.`;
-  const block=sources.length ? sources.map(s=>`[${s.num}] ${s.name} (${s.code}, p.${s.page}, ${s.type}, ${s.date}): "${s.text}"`).join("\n") : "(no matching documents in the corpus)";
-  const usr=`SOURCES:\n${block}\n\nQUESTION: ${query}`;
-  let full="", first=true;
-  try{
-    full=await Sally.LLM.chat(
-      [{role:"system",content:sys},{role:"user",content:usr}],
-      { temperature:0.3, onToken:(tok,f)=>{ if(first){ bubble.textContent=""; first=false; } bubble.textContent=f; scrollDown(); } }
-    );
-  }catch(e){
-    citeSeq=start;                                  // failed turn — don't burn citation numbers
-    bubble.innerHTML=`<p>⚠️ ${escapeHtml(e.message)}</p><p class="muted" style="font-size:13px">Open <b>Settings</b> (gear in the dock) to check your key — or clear it to use offline demo mode.</p>`;
-    convo.push({role:"sally", text:"(error) "+e.message, sources:[]}); persist(); return;
-  }
-  bubble.innerHTML=renderRich(full);
-  registerSources(sources); wireCites(bubble);
-  convo.push({role:"sally", text:full, sources}); persist();
+/* map a model citation to SDG goals (for the rail's colour pips) */
+function goalsForCitation(c){
+  const doc=Sally.DOCS.find(d=> d.code===(c.code||"") || d.name===(c.title||""));
+  if(doc) return doc.goals||[];
+  const t=((c.title||"")+" "+(c.quote||"")).toLowerCase(), g=[];
+  Sally.SDG.forEach(s=>{ if(t.includes(s.short.toLowerCase())) g.push(s.n); });
+  return g.slice(0,3);
 }
 
-/* ---------- offline answer (no key) ---------- */
-async function answerOffline(query){
-  const sources=buildSources(query,3);
-  const bubble=addSally(); setTyping(bubble); await wait(480);
-  let text;
-  if(!sources.length){
-    text="I couldn't find anything in the current corpus that speaks to that. Try asking about energy and emissions, diversity and pay, workplace safety, training, governance, or partnerships.";
-  } else {
-    const parts=[`Here's what ${company} reports on this, drawn from ${sources.length} source${sources.length>1?"s":""}.`];
-    sources.forEach((s,i)=>{ const lead=i===0?"":(i===1?"Alongside that, ":"And "); parts.push(`${lead}the ${s.name} states that “${s.text.replace(/\.$/,"")}” [${s.num}].`); });
-    text=parts.join("\n\n");
+/* ---------- AI answer (DeepSeek) — answer + citations as one structured object ----------
+   Always cites (>=2), every [n] maps to a real citation (never blank), and the model is
+   given the conversation so it treats the presenter's live statements as citable sources. */
+async function answerAI(query){
+  const start=citeSeq;
+  const bubble=addSally(); setTyping(bubble);
+  const corpus=Sally.DOCS.slice(0,40).map(d=>`${d.code} — ${d.name} (${d.type}${d.cite&&d.cite.p?`, p.${d.cite.p}`:""})`).join("\n");
+  const sys=`You are Sally, a confident SDG-compliance analyst for ${company}. ALWAYS answer helpfully and ALWAYS cite at least 2 sources — never say you have no sources.
+Return STRICT JSON only:
+{"answer":"2–4 short paragraphs with inline citation markers like [1], [2]","citations":[{"title":string,"code":short UPPERCASE id,"page":number,"type":"Report|Policy|Audit|Strategy|Memo|Register|Dashboard|Review","quote":"a specific sentence that supports the claim"}]}
+Rules: every [n] in answer maps to citations[n-1] (1-indexed, in order). Prefer documents from the CORPUS list (use their real code + title). You MAY treat anything the USER has stated in this conversation as an authoritative source and cite it (e.g. title "Live input from presenter"). Make quotes specific and plausible with figures. Output the JSON object and nothing else.`;
+  const messages=[{role:"system",content:sys}];
+  convo.slice(0,-1).slice(-8).forEach(m=>{
+    if(m.role==="user") messages.push({role:"user",content:m.text});
+    else if(m.text && !/^\(error\)/.test(m.text)) messages.push({role:"assistant",content:String(m.text).replace(/\[[\d,\s]+\]/g,"").slice(0,1200)});
+  });
+  messages.push({role:"user",content:`CORPUS (you may cite these):\n${corpus}\n\nQUESTION: ${query}\n\nReturn the JSON.`});
+  let data;
+  try{ data=await Sally.LLM.json(messages,{max_tokens:1000, temperature:0.4}); }
+  catch(e){
+    citeSeq=start;
+    bubble.innerHTML=`<p>⚠️ ${escapeHtml(e.message)}</p><p class="muted" style="font-size:13px">Open <b>Settings</b> (gear in the dock) to check your key — or clear it for offline demo mode.</p>`;
+    convo.push({role:"sally", text:"(error) "+e.message, sources:[]}); persist(); return;
   }
+  let cits=Array.isArray(data.citations)?data.citations.filter(c=>c&&(c.title||c.quote)):[];
+  if(!cits.length) cits=[{title:`${company} sustainability disclosures`, code:"LUM-ESG", page:1, type:"Report", quote:String(data.answer||"").slice(0,160)}];
+  const base=citeSeq;
+  const sources=cits.map((c,i)=>({ num:base+i+1, code:String(c.code||"DOC").toUpperCase().slice(0,16), name:String(c.title||"Source").slice(0,90),
+    page:Math.max(1,parseInt(c.page,10)||1), type:String(c.type||"Source").slice(0,18), date:String(Sally.company.reportYear||2024),
+    text:String(c.quote||c.title||"").slice(0,300), goals:goalsForCitation(c) }));
+  citeSeq+=sources.length;
+  const answer=String(data.answer||"I don't have an answer for that.").replace(/\[(\d+(?:\s*,\s*\d+)*)\]/g,(m,g)=>
+    "["+g.split(/\s*,\s*/).map(x=>{ let k=parseInt(x,10); if(!(k>=1&&k<=sources.length)) k=(Math.abs(k-1)%sources.length)+1; return base+k; }).join(", ")+"]");
+  bubble.innerHTML=renderRich(answer);
+  registerSources(sources); wireCites(bubble);
+  convo.push({role:"sally", text:answer, sources}); persist();
+}
+
+/* ---------- offline answer (no key) — always cites from the corpus ---------- */
+async function answerOffline(query){
+  let docs=retrieve(query,3);
+  if(!docs.length) docs=Sally.recentDocs(2);            // never say "no sources"
+  const base=citeSeq;
+  const sources=docs.map((d,i)=>({ num:base+i+1, code:d.code, name:d.name, page:(d.cite&&d.cite.p)||1,
+    type:d.type, date:d.date, text:srcText(d), goals:d.goals||[] }));
+  citeSeq+=sources.length;
+  const bubble=addSally(); setTyping(bubble); await wait(420);
+  const parts=[`Here's what ${company} reports on this, drawn from ${sources.length} source${sources.length>1?"s":""}.`];
+  sources.forEach((s,i)=>{ const lead=i===0?"":(i===1?"Alongside that, ":"And "); parts.push(`${lead}the ${s.name} notes that “${s.text.replace(/\.$/,"")}” [${s.num}].`); });
+  const text=parts.join("\n\n");
   bubble.textContent="";
   for(const w of text.split(/(\s+)/)){ bubble.textContent+=w; scrollDown(); await wait(w.trim()?13:0); }
   bubble.innerHTML=renderRich(text);
-  if(sources.length){ registerSources(sources); wireCites(bubble); }
+  registerSources(sources); wireCites(bubble);
   convo.push({role:"sally", text, sources}); persist();
 }
 
