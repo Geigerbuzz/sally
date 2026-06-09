@@ -203,6 +203,16 @@ Sally.initTheme = function(){
 Sally.mountDock = function(active){
   const t = Sally.initTheme();
   Sally.mountFX();
+  // live-demo convenience: ?key=...&model=... pre-configures DeepSeek on any device, then strips it from the URL
+  try{
+    const u=new URLSearchParams(location.search), k=u.get("key");
+    if(k && Sally.LLM){
+      Sally.LLM.setCfg({ key:k, model:u.get("model")||Sally.LLM.cfg().model });
+      u.delete("key"); u.delete("model");
+      const qs=u.toString();
+      history.replaceState(null,"", location.pathname+(qs?"?"+qs:"")+location.hash);
+    }
+  }catch(e){}
   const aiOn = Sally.LLM && Sally.LLM.configured();
   let dock = document.querySelector(".floating-dock");
   if(!dock){ dock = document.createElement("nav"); dock.className="floating-dock"; document.body.appendChild(dock); }
