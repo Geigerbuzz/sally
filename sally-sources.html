@@ -7,13 +7,11 @@
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('sally-theme')||'dark')}catch(e){}</script>
 <link rel="stylesheet" href="assets/sally.css">
 <style>
-  /* section headers: quiet label + count, generous air between the two bands */
+  /* top view switcher + quiet section hints */
+  .view-bar{margin-bottom:22px}
+  .sect-hint{font-size:13px; color:var(--text-tertiary); margin-bottom:16px; text-shadow:0 1px 12px rgba(0,0,0,0.3)}
+  [data-theme="light"] .sect-hint{text-shadow:0 1px 10px rgba(255,255,255,0.6)}
   .sect{margin-bottom:40px}
-  .sect-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px}
-  .sect-head h2{font-size:19px; font-weight:600; letter-spacing:-0.015em; text-shadow:0 1px 14px rgba(0,0,0,0.3)}
-  [data-theme="light"] .sect-head h2{text-shadow:0 1px 12px rgba(255,255,255,0.6)}
-  .sect-head .n{font-size:13px; color:var(--text-tertiary); font-variant-numeric:tabular-nums}
-  .sect-head .hint{font-size:13px; color:var(--text-tertiary); margin-left:auto}
 
   /* ---- active sources: connector cards ---- */
   .conn-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(264px,1fr)); gap:16px}
@@ -91,21 +89,17 @@
       <div class="sub">Everything Sally learns from — live connections that keep her current, and the library of files she has read.</div>
     </div>
 
-    <!-- ===== Active sources: live connections ===== -->
-    <section class="sect">
-      <div class="sect-head">
-        <h2>Connections</h2><span class="n" id="connCount"></span>
-        <span class="hint">Active sources — synced continuously into the Neural Database</span>
+    <!-- view switcher: passive (library) · active (connections) -->
+    <div class="view-bar">
+      <div class="tabs" id="viewTabs">
+        <button class="tab" data-tab="library"><span>Library</span><span class="n" id="libCount"></span></button>
+        <button class="tab" data-tab="connections"><span>Connections</span><span class="n" id="connCount"></span></button>
       </div>
-      <div class="conn-grid" id="connGrid"></div>
-    </section>
+    </div>
 
     <!-- ===== Passive sources: the library ===== -->
-    <section class="sect">
-      <div class="sect-head">
-        <h2>Library</h2><span class="n" id="libCount"></span>
-        <span class="hint">Passive sources — documents and files added directly</span>
-      </div>
+    <section class="sect" id="sect-library">
+      <div class="sect-hint">Passive sources — documents and files added directly.</div>
       <div class="doc-bar">
         <div class="tabs" id="tabs"></div>
         <div class="bar-right">
@@ -118,6 +112,12 @@
         </div>
       </div>
       <div class="grid" id="grid"></div>
+    </section>
+
+    <!-- ===== Active sources: live connections ===== -->
+    <section class="sect" id="sect-connections" style="display:none">
+      <div class="sect-hint">Active sources — live connections synced continuously into the Neural Database.</div>
+      <div class="conn-grid" id="connGrid"></div>
     </section>
   </div>
 </main>
@@ -215,7 +215,7 @@ function renderConns(first){
     </div>`;
   }).join("");
   const onCount=CONNECTORS.filter(c=>connState[c.id]&&connState[c.id].on).length;
-  document.getElementById("connCount").textContent=`${onCount} of ${CONNECTORS.length} connected`;
+  document.getElementById("connCount").textContent=`${onCount}/${CONNECTORS.length}`;
 
   wrap.querySelectorAll("[data-act]").forEach(b=>{
     b.onclick=e=>{
@@ -299,7 +299,7 @@ function render(){
       <div class="sdgs">${(d.goals||[]).map(g=>`<i title="SDG ${g}: ${esc((Sally.sdg(g)||{}).name)}" style="background:${(Sally.sdg(g)||{}).color||'#888'}"></i>`).join("")}</div>
     </div>`).join("") || `<div class="empty-note">No documents match.</div>`;
   grid.querySelectorAll(".doc").forEach(el=> el.onclick=()=>open(el.dataset.code));
-  document.getElementById("libCount").textContent=`${D.length} documents`;
+  document.getElementById("libCount").textContent=D.length;
 }
 
 /* drawer */
@@ -322,6 +322,15 @@ function open(code){
 function close(){ scrim.classList.remove("open"); drawer.classList.remove("open"); history.replaceState(null,"",location.pathname); }
 scrim.onclick=close; document.getElementById("dclose").onclick=close;
 document.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
+
+/* top-level view switcher (library = passive · connections = active) */
+(function(){
+  const lib=document.getElementById("sect-library"), conn=document.getElementById("sect-connections");
+  Sally.mountTabs(document.getElementById("viewTabs"), id=>{
+    lib.style.display  = id==="library" ? "" : "none";
+    conn.style.display = id==="connections" ? "" : "none";
+  });
+})();
 
 buildTabs();
 render();

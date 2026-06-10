@@ -101,13 +101,15 @@ canvas{display:block}
 .kg-stat{font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--faint); white-space:nowrap; margin-left:2px}
 @media (max-width:980px){ .kg-stat{display:none} }
 
-/* ===== glass icon-dock (matches the rest of Sally) ===== */
-.floating-dock{ position:fixed; z-index:8; top:50%; left:var(--dock-margin); transform:translateY(-50%);
+/* ===== glass icon-dock — EXACT copy of sally.css so the dock never moves
+       or re-tints between pages (incl. divider + mobile bottom-bar rules) ===== */
+.floating-dock{ position:fixed; z-index:300; top:50%; left:var(--dock-margin); transform:translateY(-50%);
   width:var(--dock-width); display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 0;
-  background:var(--glass-bg); backdrop-filter:blur(28px) saturate(180%); -webkit-backdrop-filter:blur(28px) saturate(180%);
+  background:rgba(22,22,24,0.66); backdrop-filter:blur(30px) saturate(180%); -webkit-backdrop-filter:blur(30px) saturate(180%);
   border:1px solid var(--glass-border); border-radius:22px;
-  box-shadow:0 12px 40px rgba(0,0,0,0.4), 0 1px 0 rgba(255,255,255,0.10) inset; }
-.dock-brand{ display:flex; align-items:center; justify-content:center; width:40px;height:40px; margin-bottom:6px }
+  box-shadow:0 12px 40px rgba(0,0,0,0.40), 0 1px 0 rgba(255,255,255,0.10) inset;
+  transition:left .4s cubic-bezier(0.2,0.8,0.2,1) }
+.dock-brand{ display:flex; align-items:center; justify-content:center; width:40px;height:40px; margin-bottom:6px; flex:none }
 .dock-brand .dot{ width:26px;height:26px;border-radius:9px; position:relative;
   background:linear-gradient(140deg,#5ab0ff 0%,var(--accent) 55%,#0a5fd6 100%);
   box-shadow:0 0 0 1px rgba(255,255,255,.22) inset, 0 6px 16px -6px var(--accent) }
@@ -115,16 +117,18 @@ canvas{display:block}
   background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 60%) }
 .dock-items{ display:flex; flex-direction:column; align-items:center; gap:4px; width:100% }
 .dock-item{ position:relative; display:flex; align-items:center; justify-content:center;
-  width:44px;height:44px; color:var(--muted); font-size:22px; border-radius:13px; text-decoration:none;
+  width:44px;height:44px; border:none; background:transparent; cursor:pointer;
+  color:var(--muted); font-size:22px; border-radius:13px; text-decoration:none;
   transition:all .2s cubic-bezier(.2,.8,.2,1) }
 .dock-item:hover{ background:rgba(128,128,128,0.14); color:var(--text); transform:scale(1.06) }
 .dock-item.active{ color:#fff; background:linear-gradient(140deg,var(--accent-2),var(--accent));
   box-shadow:0 6px 16px -6px var(--accent), 0 1px 0 rgba(255,255,255,.3) inset }
 .dock-item::before{ content:attr(data-label); position:absolute; left:calc(100% + 14px); top:50%;
-  transform:translateY(-50%) translateX(-6px); background:var(--bg-surface); color:var(--text); font-family:var(--body);
+  transform:translateY(-50%) translateX(-6px); background:#3a3a3c; color:var(--text); font-family:var(--body);
   font-size:12px; font-weight:500; white-space:nowrap; padding:6px 10px; border-radius:8px; border:1px solid var(--line);
   box-shadow:0 10px 30px rgba(0,0,0,.32); opacity:0; pointer-events:none; transition:opacity .18s, transform .18s; z-index:5 }
 .dock-item:hover::before{ opacity:1; transform:translateY(-50%) translateX(0) }
+.dock-divider{ height:1px; width:42%; background:var(--glass-border); margin:6px 0 }
 .brand{display:flex; align-items:baseline; gap:10px; user-select:none; text-decoration:none; color:inherit; cursor:pointer}
 .brand .logo{
   font-family:var(--display); font-weight:800; font-size:20px; letter-spacing:-0.02em;
@@ -291,10 +295,19 @@ canvas{display:block}
 }
 #status b{color:var(--muted); font-weight:500}
 
-@media (max-width:720px){
-  nav,.brand .sub{display:none}
+@media (max-width:760px){
+  /* dock becomes the same bottom bar as every other page */
+  .floating-dock{ top:auto; bottom:var(--dock-margin); left:50%; transform:translateX(-50%);
+    flex-direction:row; width:auto; max-width:calc(100vw - 32px); padding:8px 12px; gap:4px; overflow-x:auto }
+  .floating-dock .dock-brand{ display:none }
+  .floating-dock .dock-items{ flex-direction:row }
+  .dock-divider{ width:1px; height:24px; margin:0 4px }
+  .dock-item::before{ display:none }
+  #topbar{ left:18px }
+  .brand .sub{display:none}
   #search{width:150px}
   #search:focus{width:180px}
+  #legend{ display:none }
 }
 </style>
 </head>
