@@ -181,7 +181,7 @@
         </div>`).join("");
       el.innerHTML = `${this.head(p)}<div class="wlist">${rows}</div>`;
       el.querySelectorAll(".wrow").forEach(r=> r.addEventListener("click",e=>{
-        e.stopPropagation(); location.href="sally-documents.html#"+r.dataset.code; }));
+        e.stopPropagation(); location.href="sally-sources.html#"+r.dataset.code; }));
       return el;
     },
 

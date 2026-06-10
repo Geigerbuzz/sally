@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sources — Sally</title>
+<script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('sally-theme')||'dark')}catch(e){}</script>
+<link rel="stylesheet" href="assets/sally.css">
+<style>
+  /* section headers: quiet label + count, generous air between the two bands */
+  .sect{margin-bottom:40px}
+  .sect-head{display:flex; align-items:baseline; gap:12px; margin-bottom:16px}
+  .sect-head h2{font-size:19px; font-weight:600; letter-spacing:-0.015em; text-shadow:0 1px 14px rgba(0,0,0,0.3)}
+  [data-theme="light"] .sect-head h2{text-shadow:0 1px 12px rgba(255,255,255,0.6)}
+  .sect-head .n{font-size:13px; color:var(--text-tertiary); font-variant-numeric:tabular-nums}
+  .sect-head .hint{font-size:13px; color:var(--text-tertiary); margin-left:auto}
+
+  /* ---- active sources: connector cards ---- */
+  .conn-grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(264px,1fr)); gap:16px}
+  .conn{padding:18px; display:flex; flex-direction:column; gap:13px; min-height:148px}
+  .conn .top{display:flex; align-items:center; gap:13px}
+  .conn .ci{width:42px;height:42px;border-radius:12px; flex:none; font-size:21px;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--brand-soft,rgba(255,255,255,0.07)); color:var(--brand,var(--text-primary))}
+  .conn h3{font-size:15px; font-weight:600; line-height:1.2}
+  .conn .kind{font-family:var(--mono); font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--text-tertiary); margin-top:3px}
+  .conn p{font-size:12.5px; color:var(--text-secondary); line-height:1.5; flex:1; margin:0}
+  .conn .foot{display:flex; align-items:center; gap:8px; min-height:32px}
+  .conn .live{display:flex; align-items:center; gap:8px; font-size:12px; color:var(--text-secondary); min-width:0}
+  .conn .live .d{width:7px;height:7px;border-radius:50%; background:var(--good); flex:none;
+    box-shadow:0 0 0 0 rgba(50,215,75,.5); animation:livePulse 2.6s var(--ease) infinite}
+  @keyframes livePulse{ 0%{box-shadow:0 0 0 0 rgba(50,215,75,.45)} 70%{box-shadow:0 0 0 7px rgba(50,215,75,0)} 100%{box-shadow:0 0 0 0 rgba(50,215,75,0)} }
+  .conn .live .txt{white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+  .conn .live .txt b{color:var(--text-primary); font-weight:600}
+  .conn .ibtn{width:30px;height:30px; border-radius:9px; flex:none; cursor:pointer; font-size:14px;
+    display:flex; align-items:center; justify-content:center; color:var(--text-tertiary);
+    border:1px solid var(--border); background:transparent; transition:.16s var(--ease)}
+  .conn .ibtn:hover{color:var(--text-primary); border-color:var(--border-2); background:rgba(255,255,255,0.05)}
+  .conn .ibtn.danger:hover{color:var(--bad); border-color:rgba(255,69,58,.4)}
+  .conn .grow{flex:1}
+  .conn .btn{width:100%}
+  .conn .btn.busy{opacity:.7; pointer-events:none}
+  @keyframes connIn{ from{opacity:0; transform:translateY(10px) scale(.98)} to{opacity:1; transform:none} }
+  .conn.enter{animation:connIn .45s var(--ease) backwards}
+
+  /* ---- passive sources: library bar + document grid (carried over) ---- */
+  .doc-bar{display:flex; align-items:center; justify-content:space-between; gap:16px; margin-bottom:20px; flex-wrap:wrap}
+  .doc-bar .bar-right{display:flex; align-items:center; gap:10px}
+  .doc-bar .search{width:240px}
+  .doc-bar .search input{padding-top:9px; padding-bottom:9px}
+
+  .grid{display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; padding-bottom:20px}
+  .doc{padding:20px; cursor:pointer; display:flex; flex-direction:column; min-height:190px}
+  .doc .top{display:flex; align-items:flex-start; gap:13px}
+  .doc .fi{width:40px;height:44px;border-radius:11px; flex:none;
+    display:flex; align-items:center; justify-content:center;
+    background:var(--accent-soft); color:var(--accent); font-size:20px}
+  .doc .code{font-family:var(--mono); font-size:10px; letter-spacing:.12em; text-transform:uppercase; color:var(--text-tertiary)}
+  .doc h3{font-size:16px; font-weight:600; color:var(--text-primary); margin:4px 0 0; line-height:1.25}
+  .doc .meta{font-family:var(--mono); font-size:10px; letter-spacing:.04em; color:var(--text-tertiary); margin-top:6px}
+  .doc p{color:var(--text-secondary); font-size:13px; line-height:1.55; margin:13px 0 0; flex:1}
+  .doc .sdgs{display:flex; gap:5px; margin-top:14px}
+  .doc .sdgs i{width:11px;height:11px;border-radius:50%}
+  .empty-note{color:var(--text-tertiary); font-family:var(--mono); font-size:12px; padding:40px 4px}
+
+  /* drawer page-specific bits (base .scrim/.drawer/... live in sally.css) */
+  .drawer .eyebrow{margin-bottom:12px}
+  .drawer h2{font-size:24px; line-height:1.18; padding-right:34px}
+  .drawer .dmeta{font-family:var(--mono); font-size:10.5px; letter-spacing:.04em; color:var(--text-tertiary);
+    margin-top:14px; display:flex; gap:14px; flex-wrap:wrap}
+  .drawer .snip{font-size:14px; color:var(--text-primary); line-height:1.6;
+    border-left:2px solid var(--accent-line); padding:2px 0 2px 14px}
+  .drawer .row2{display:flex; gap:9px; flex-wrap:wrap}
+  .sgoal{display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid var(--border);
+    border-radius:var(--radius-sm); background:rgba(255,255,255,0.03); flex:1; min-width:160px}
+  [data-theme="light"] .sgoal{background:rgba(0,0,0,0.02)}
+  .sgoal i{width:11px;height:11px;border-radius:50%; flex:none}
+  .sgoal .nm{font-size:13px; color:var(--text-primary)}
+  .sgoal .nm small{display:block; font-family:var(--mono); font-size:9px; color:var(--text-tertiary); letter-spacing:.08em; margin-top:2px}
+
+  @media (max-width:680px){ .doc-bar .search{width:100%} .doc-bar .bar-right{flex:1} .sect-head .hint{display:none} }
+</style>
+</head>
+<body>
+
+<main class="shell">
+  <div class="inner">
+    <div class="page-head">
+      <div class="eyebrow accent">Knowledge intake</div>
+      <h1>Sources</h1>
+      <div class="sub">Everything Sally learns from — live connections that keep her current, and the library of files she has read.</div>
+    </div>
+
+    <!-- ===== Active sources: live connections ===== -->
+    <section class="sect">
+      <div class="sect-head">
+        <h2>Connections</h2><span class="n" id="connCount"></span>
+        <span class="hint">Active sources — synced continuously into the Neural Database</span>
+      </div>
+      <div class="conn-grid" id="connGrid"></div>
+    </section>
+
+    <!-- ===== Passive sources: the library ===== -->
+    <section class="sect">
+      <div class="sect-head">
+        <h2>Library</h2><span class="n" id="libCount"></span>
+        <span class="hint">Passive sources — documents and files added directly</span>
+      </div>
+      <div class="doc-bar">
+        <div class="tabs" id="tabs"></div>
+        <div class="bar-right">
+          <div class="search">
+            <i class="ri-search-line"></i>
+            <input class="input" id="q" placeholder="Search…">
+          </div>
+          <input type="file" id="pdfInput" accept="application/pdf" style="display:none">
+          <button class="btn btn-sm" id="uploadBtn" title="Add a PDF — Sally reads it and tags it"><i class="ri-add-line"></i> Add PDF</button>
+        </div>
+      </div>
+      <div class="grid" id="grid"></div>
+    </section>
+  </div>
+</main>
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer">
+  <div class="dh">
+    <div class="dclose" id="dclose"><i class="ri-close-line"></i></div>
+    <div class="eyebrow" id="dType"></div>
+    <h2 id="dTitle"></h2>
+    <div class="dmeta" id="dMeta"></div>
+  </div>
+  <div class="dbody" id="dBody"></div>
+  <div class="dfoot">
+    <a class="btn btn-accent" id="dAsk"><i class="ri-chat-3-line"></i>Ask Sally about this</a>
+    <a class="btn" href="sally-neural-database.html"><i class="ri-brain-line"></i>View in Neural Database</a>
+  </div>
+</aside>
+
+<script src="assets/corpus.js"></script>
+<script src="assets/llm.js"></script>
+<script src="assets/store.js"></script>
+<script src="vendor/pdf.min.js"></script>
+<script src="assets/ingest.js"></script>
+<script>
+Sally.mountDock("sources");
+const D=Sally.DOCS;
+const grid=document.getElementById("grid");
+let activeGroup="all", query="";
+
+/* =========================================================================
+   ACTIVE SOURCES — connector cards. Connection state persists per browser
+   via Sally.store so the page feels like a real, configured product.
+   ========================================================================= */
+const CONNECTORS=[
+  {id:"gdrive",  name:"Google Drive", kind:"Files",     icon:"ri-drive-line",            brand:"#34a853",
+   desc:"Indexes shared drives and folders — new and edited files flow straight into the corpus.",
+   unit:"files", seed:1284},
+  {id:"gmail",   name:"Gmail",        kind:"Email",     icon:"ri-mail-line",             brand:"#ea4335",
+   desc:"Reads labelled threads (e.g. “Sustainability”) so commitments made over email are never lost.",
+   unit:"threads", seed:342},
+  {id:"hubspot", name:"HubSpot",      kind:"CRM",       icon:"ri-customer-service-line", brand:"#ff7a59",
+   desc:"Pulls company, deal and engagement records to ground supplier and partnership questions.",
+   unit:"records", seed:96},
+  {id:"slack",   name:"Slack",        kind:"Messages",  icon:"ri-slack-line",            brand:"#36c5f0",
+   desc:"Follows chosen channels — decisions made in #esg-reporting become citable sources.",
+   unit:"channels", seed:7},
+  {id:"notion",  name:"Notion",       kind:"Wiki",      icon:"ri-notion-line",           brand:"#9a8cf0",
+   desc:"Syncs workspace pages and databases — policies and playbooks stay current automatically.",
+   unit:"pages", seed:218},
+  {id:"sharepoint", name:"SharePoint", kind:"Files",    icon:"ri-microsoft-line",        brand:"#0078d4",
+   desc:"Watches document libraries across sites — the official record, indexed as it changes.",
+   unit:"documents", seed:530},
+];
+
+/* state: {gdrive:{on:true, last:ts, items:n}, ...} — Google Drive ships connected so the page never looks empty */
+const connState = Sally.store.get("sources", null) || { gdrive:{on:true, last:Date.now()-7*60000, items:1284} };
+function saveConn(){ Sally.store.set("sources", connState); }
+
+function ago(ts){
+  const s=Math.max(0,(Date.now()-ts)/1000);
+  if(s<45) return "just now";
+  if(s<3600) return Math.round(s/60)+" min ago";
+  if(s<86400) return Math.round(s/3600)+" h ago";
+  return Math.round(s/86400)+" d ago";
+}
+function esc(s){ return String(s==null?"":s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function hexSoft(hex,a){ const x=hex.replace("#",""); return `rgba(${parseInt(x.substr(0,2),16)},${parseInt(x.substr(2,2),16)},${parseInt(x.substr(4,2),16)},${a})`; }
+
+function renderConns(first){
+  const wrap=document.getElementById("connGrid");
+  wrap.innerHTML=CONNECTORS.map((c,i)=>{
+    const st=connState[c.id];
+    const on=st&&st.on;
+    return `
+    <div class="card conn ${first?'enter':''}" style="--brand:${c.brand};--brand-soft:${hexSoft(c.brand,.16)};animation-delay:${i*55}ms" data-id="${c.id}">
+      <div class="top">
+        <div class="ci"><i class="${c.icon}"></i></div>
+        <div style="min-width:0">
+          <h3>${esc(c.name)}</h3>
+          <div class="kind">${esc(c.kind)} · active source</div>
+        </div>
+      </div>
+      <p>${esc(c.desc)}</p>
+      <div class="foot">
+        ${on ? `
+          <div class="live"><span class="d"></span><span class="txt"><b>${st.items.toLocaleString()}</b> ${c.unit} · synced ${ago(st.last)}</span></div>
+          <span class="grow"></span>
+          <button class="ibtn" data-act="sync" title="Sync now"><i class="ri-refresh-line"></i></button>
+          <button class="ibtn danger" data-act="off" title="Disconnect"><i class="ri-link-unlink-m"></i></button>
+        ` : `
+          <button class="btn btn-sm" data-act="on"><i class="ri-plug-line"></i> Connect</button>
+        `}
+      </div>
+    </div>`;
+  }).join("");
+  const onCount=CONNECTORS.filter(c=>connState[c.id]&&connState[c.id].on).length;
+  document.getElementById("connCount").textContent=`${onCount} of ${CONNECTORS.length} connected`;
+
+  wrap.querySelectorAll("[data-act]").forEach(b=>{
+    b.onclick=e=>{
+      e.stopPropagation();
+      const id=b.closest(".conn").dataset.id, c=CONNECTORS.find(x=>x.id===id);
+      const act=b.dataset.act;
+      if(act==="on"){
+        b.classList.add("busy");
+        b.innerHTML=`<i class="ri-loader-4-line spin"></i> Connecting…`;
+        setTimeout(()=>{ b.innerHTML=`<i class="ri-loader-4-line spin"></i> Authorising…`; },700);
+        setTimeout(()=>{
+          connState[id]={on:true,last:Date.now(),items:c.seed};
+          saveConn(); renderConns();
+        },1600);
+      }else if(act==="sync"){
+        const ic=b.querySelector("i"); ic.classList.add("spin"); b.style.pointerEvents="none";
+        setTimeout(()=>{
+          const st=connState[id];
+          st.last=Date.now(); st.items+=Math.floor(1+Math.random()*4);
+          saveConn(); renderConns();
+        },1100);
+      }else if(act==="off"){
+        connState[id]={on:false}; saveConn(); renderConns();
+      }
+    };
+  });
+}
+renderConns(true);
+/* keep the "synced X ago" labels honest without re-rendering buttons mid-press */
+setInterval(renderConnTimes, 60000);
+function renderConnTimes(){
+  document.querySelectorAll(".conn").forEach(card=>{
+    const st=connState[card.dataset.id]; if(!st||!st.on) return;
+    const c=CONNECTORS.find(x=>x.id===card.dataset.id);
+    const txt=card.querySelector(".live .txt");
+    if(txt) txt.innerHTML=`<b>${st.items.toLocaleString()}</b> ${c.unit} · synced ${ago(st.last)}`;
+  });
+}
+
+/* =========================================================================
+   PASSIVE SOURCES — the library (documents, uploads), grouped + searchable
+   ========================================================================= */
+const GROUPS=[
+  {id:"all",        label:"All",        types:null},
+  {id:"reports",    label:"Reports",    types:["Report","Review","Dashboard","Brief"]},
+  {id:"policies",   label:"Policies",   types:["Policy","Charter","Code"]},
+  {id:"audits",     label:"Audits",     types:["Audit"]},
+  {id:"strategies", label:"Strategies", types:["Strategy"]},
+  {id:"records",    label:"Records",    types:["Register","Record","Memo","Log","Upload"]},
+];
+const inGroup=(d,g)=> !g.types || g.types.includes(d.type);
+function buildTabs(){
+  const nav=document.getElementById("tabs");
+  nav.innerHTML = GROUPS
+    .filter(g=> g.id==="all" || D.some(d=>inGroup(d,g)))
+    .map(g=>`<button class="tab" data-tab="${g.id}"><span>${g.label}</span><span class="n">${D.filter(d=>inGroup(d,g)).length}</span></button>`).join("");
+  Sally.mountTabs(nav, id=>{ activeGroup=id; render(); });
+}
+
+document.getElementById("q").addEventListener("input",e=>{ query=e.target.value.trim().toLowerCase(); render(); });
+
+function match(d){
+  const g=GROUPS.find(x=>x.id===activeGroup);
+  if(g && !inGroup(d,g)) return false;
+  if(!query) return true;
+  return (d.name+" "+d.summary+" "+(d.cite&&d.cite.t||"")+" "+(d.concepts||[]).join(" ")+" "+d.code+" "+d.type).toLowerCase().includes(query);
+}
+function render(){
+  const list=D.filter(match);
+  grid.innerHTML=list.map(d=>`
+    <div class="card link doc" data-code="${esc(d.code)}">
+      <div class="top">
+        <div class="fi"><i class="ri-file-text-line"></i></div>
+        <div style="min-width:0">
+          <div class="code">${esc(d.code)}</div>
+          <h3>${esc(d.name)}</h3>
+          <div class="meta">${esc(d.type)} · ${d.pages} pp · ${esc(d.date)}</div>
+        </div>
+      </div>
+      <p>${esc(d.summary)}</p>
+      <div class="sdgs">${(d.goals||[]).map(g=>`<i title="SDG ${g}: ${esc((Sally.sdg(g)||{}).name)}" style="background:${(Sally.sdg(g)||{}).color||'#888'}"></i>`).join("")}</div>
+    </div>`).join("") || `<div class="empty-note">No documents match.</div>`;
+  grid.querySelectorAll(".doc").forEach(el=> el.onclick=()=>open(el.dataset.code));
+  document.getElementById("libCount").textContent=`${D.length} documents`;
+}
+
+/* drawer */
+const scrim=document.getElementById("scrim"), drawer=document.getElementById("drawer");
+function open(code){
+  const d=D.find(x=>x.code===code);
+  if(!d){ history.replaceState(null,"",location.pathname); return; }
+  document.getElementById("dType").textContent=d.type+" · "+d.date;
+  document.getElementById("dTitle").textContent=d.name;
+  document.getElementById("dMeta").innerHTML=`<span>${esc(d.code)}</span><span>${d.pages} pages</span><span>${(d.concepts||[]).length} concepts</span><span>${(d.goals||[]).length} goals</span>`;
+  document.getElementById("dBody").innerHTML=`
+    <div class="blk"><h4>Summary</h4><div class="muted" style="font-size:14px;line-height:1.6">${esc(d.summary)}</div></div>
+    <div class="blk"><h4>Key passage · p.${(d.cite&&d.cite.p)||1}</h4><div class="snip">“${esc(d.cite&&d.cite.t||"")}”</div></div>
+    <div class="blk"><h4>Concepts</h4><div class="row2">${(d.concepts||[]).map(c=>`<span class="chip accent">${esc(c)}</span>`).join("")}</div></div>
+    <div class="blk"><h4>Advances goals</h4><div class="row2">${(d.goals||[]).map(g=>{const s=Sally.sdg(g)||{};return `<div class="sgoal"><i style="background:${s.color||'#888'}"></i><span class="nm">${esc(s.name)}<small>SDG ${g}</small></span></div>`}).join("")}</div></div>`;
+  document.getElementById("dAsk").href="sally-ask.html?q="+encodeURIComponent("Summarise the "+d.name+" and which SDGs it supports.");
+  scrim.classList.add("open"); drawer.classList.add("open");
+  history.replaceState(null,"","#"+code);
+}
+function close(){ scrim.classList.remove("open"); drawer.classList.remove("open"); history.replaceState(null,"",location.pathname); }
+scrim.onclick=close; document.getElementById("dclose").onclick=close;
+document.addEventListener("keydown",e=>{ if(e.key==="Escape") close(); });
+
+buildTabs();
+render();
+if(location.hash) open(decodeURIComponent(location.hash.slice(1)));
+
+/* upload a PDF → ingest (DeepSeek or heuristic) → appears in the library + neural database */
+(function(){
+  const inp=document.getElementById("pdfInput"), btn=document.getElementById("uploadBtn");
+  if(!inp||!btn) return;
+  btn.onclick=()=> inp.click();
+  inp.onchange=async ()=>{
+    const file=inp.files&&inp.files[0]; inp.value=""; if(!file || !(window.Sally&&Sally.Ingest)) return;
+    const orig=btn.innerHTML; btn.disabled=true; btn.innerHTML=`<i class="ri-loader-4-line spin"></i> Reading…`;
+    try{
+      const doc=await Sally.Ingest.fromPDF(file,{onProgress:p=>{ btn.innerHTML=`<i class="ri-loader-4-line spin"></i> ${(p.label||"Processing").replace(/…$/,"")}…`; }});
+      buildTabs(); render(); open(doc.code);
+    }catch(e){ alert("Couldn't ingest that PDF: "+e.message); }
+    btn.disabled=false; btn.innerHTML=orig;
+  };
+})();
+</script>
+</body>
+</html>

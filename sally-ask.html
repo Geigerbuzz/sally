@@ -243,7 +243,7 @@ function showPop(chip, s){
   pop.innerHTML=`<div class="pnm">${escapeHtml(s.name)}</div>
     <div class="pmeta">${escapeHtml(s.code)} · p.${escapeHtml(s.page)} · ${escapeHtml(s.type)} · ${escapeHtml(s.date)}</div>
     <div class="ptext">“${escapeHtml(s.text)}”</div>
-    <div class="ptrace"><i class="ri-corner-down-right-line"></i> Documents › ${escapeHtml(s.code)} › p.${escapeHtml(s.page)}</div>`;
+    <div class="ptrace"><i class="ri-corner-down-right-line"></i> Sources › ${escapeHtml(s.code)} › p.${escapeHtml(s.page)}</div>`;
   pop.classList.add("show");
   const r=chip.getBoundingClientRect(), pw=Math.min(330, window.innerWidth-24);
   pop.style.width=pw+"px";
@@ -267,7 +267,7 @@ function registerSources(sources){
       <div class="meta">${escapeHtml(s.code)} · p.${escapeHtml(s.page)} · ${escapeHtml(s.type)} · ${escapeHtml(s.date)}</div>
       <div class="snip">${escapeHtml(s.text)}</div>
       <div class="pips">${(s.goals||[]).map(g=>`<i title="SDG ${g}" style="background:${(Sally.sdg(g)||{}).color||'#888'}"></i>`).join("")}</div>`;
-    card.onclick=()=> location.href="sally-documents.html#"+s.code;
+    card.onclick=()=> location.href="sally-sources.html#"+s.code;
     sourcesEl.appendChild(card);
   });
   const total=sourcesEl.querySelectorAll(".srccard").length;

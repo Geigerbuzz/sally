@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
       data:{ value:ov.covered, unit:"/17", icon:"ri-checkbox-circle-line", accent:getCss("--good") } },
     { id:"w-gaps", template:"kpi-card", dimension:"1x1", title:"Coverage gaps", clickable:true, href:"sally-sdg-compliance.html",
       data:{ value:ov.gaps, icon:"ri-error-warning-line", accent:getCss("--bad"), trend:{dir:"down", val:"close these"} } },
-    { id:"w-docs", template:"kpi-card", dimension:"1x1", title:"Documents assessed", clickable:true, href:"sally-documents.html",
+    { id:"w-docs", template:"kpi-card", dimension:"1x1", title:"Sources indexed", clickable:true, href:"sally-sources.html",
       data:{ value:Sally.DOCS.length, icon:"ri-file-list-3-line", accent:getCss("--info") } },
     { id:"w-gauge", template:"gauge", dimension:"2x2", title:"SDG compliance", pct:ov.pct, label:"Overall",
       color:getCss("--accent"), clickable:true, href:"sally-sdg-compliance.html", corner:"ri-arrow-right-up-line" },

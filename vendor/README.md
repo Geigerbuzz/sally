@@ -1,6 +1,6 @@
 # Vendored assets (offline runtime)
 
-These are bundled into `sally-knowledge-graph.html` at build time so the page
+These are bundled into `sally-neural-database.html` at build time so the page
 runs **fully offline** at presentation time — no CDN, no runtime fetches.
 
 - `force-graph.min.js` — force-graph v1.51.4 UMD build (vasturiano), MIT.

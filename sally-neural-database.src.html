@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Sally — Knowledge Graph</title>
+<title>Sally — Neural Database</title>
 <script>try{document.documentElement.setAttribute('data-theme',localStorage.getItem('sally-theme')||'dark')}catch(e){}</script>
 <link rel="stylesheet" href="vendor/remixicon.css">
 <style>
@@ -81,7 +81,9 @@ body{
 #vignette{position:fixed; inset:0; z-index:3; pointer-events:none;
   box-shadow:inset 0 0 260px 70px rgba(0,0,0,0.55);
   background:radial-gradient(120% 120% at 50% 45%, rgba(0,0,0,0) 60%, rgba(0,0,0,0.40) 100%)}
-#graph{position:fixed; inset:0; z-index:1}
+/* the canvas fades in only once the layout has settled — no chaotic first paint */
+#graph{position:fixed; inset:0; z-index:1; opacity:0; transition:opacity .9s ease}
+#graph.ready{opacity:1}
 canvas{display:block}
 
 /* ===== Top chrome bar (floating glass) ===== */
@@ -97,6 +99,8 @@ canvas{display:block}
 }
 #topbar > *{pointer-events:auto}
 .kg-title{font-family:var(--display); font-weight:600; font-size:15px; letter-spacing:-0.01em; color:var(--text); white-space:nowrap}
+.kg-stat{font-family:var(--mono); font-size:10px; letter-spacing:.08em; color:var(--faint); white-space:nowrap; margin-left:2px}
+@media (max-width:980px){ .kg-stat{display:none} }
 
 /* ===== glass icon-dock (matches the rest of Sally) ===== */
 .floating-dock{ position:fixed; z-index:8; top:50%; left:var(--dock-margin); transform:translateY(-50%);
@@ -258,6 +262,13 @@ canvas{display:block}
 #panel .group h4{font-family:var(--mono); font-size:10px; letter-spacing:.18em; text-transform:uppercase;
   color:var(--faint); margin:0 0 12px; display:flex; align-items:center; gap:8px}
 #panel .group h4 .count{color:var(--faint-2)}
+/* groups glide in with a slight stagger whenever the panel content changes */
+#panel.open .group{animation:groupIn .42s cubic-bezier(.22,.61,.36,1) backwards}
+#panel.open .group:nth-of-type(2){animation-delay:.05s}
+#panel.open .group:nth-of-type(3){animation-delay:.10s}
+#panel.open .group:nth-of-type(4){animation-delay:.15s}
+@keyframes groupIn{from{opacity:0; transform:translateY(9px)} to{opacity:1; transform:none}}
+@media (prefers-reduced-motion:reduce){ #panel.open .group{animation:none} }
 #panel .item{
   display:flex; align-items:center; gap:11px; padding:10px 12px; margin:5px 0;
   background:rgba(255,255,255,0.02); border:1px solid var(--line); border-radius:9px;
@@ -297,13 +308,14 @@ canvas{display:block}
 
 <!-- ===== Top control bar (graph tools) ===== -->
 <header id="topbar">
-  <span class="kg-title">Knowledge Graph</span>
+  <span class="kg-title">Neural Database</span>
+  <span class="kg-stat" id="kgStat"></span>
 
   <div class="spacer"></div>
 
   <div class="search">
     <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
-    <input id="search" type="text" placeholder="Search the graph…" autocomplete="off" spellcheck="false">
+    <input id="search" type="text" placeholder="Search — press /" autocomplete="off" spellcheck="false">
   </div>
 
   <div class="filters" id="filters">
@@ -313,9 +325,9 @@ canvas{display:block}
   </div>
 
   <input type="file" id="pdfInput" accept="application/pdf" style="display:none">
-  <button class="btn btn-up" id="uploadBtn" title="Upload a PDF — Sally reads it and grows the graph">
+  <button class="btn btn-up" id="uploadBtn" title="Add a PDF — Sally reads it and grows the neural database">
     <svg viewBox="0 0 24 24"><path d="M12 16V4M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>
-    Upload PDF
+    Add PDF
   </button>
 
   <button class="btn" id="replay" title="Re-run the layout">
@@ -356,7 +368,7 @@ canvas{display:block}
 <script src="assets/llm.js"></script>
 <script src="assets/store.js"></script>
 <script src="assets/ingest.js"></script>
-<script>try{ Sally.mountDock("graph"); }catch(e){ console.warn("dock mount failed", e); }</script>
+<script>try{ Sally.mountDock("neural"); }catch(e){ console.warn("dock mount failed", e); }</script>
 
 <!-- ===== Graph application ===== -->
 <script>
@@ -508,6 +520,7 @@ const Graph = ForceGraph()(el)
   .cooldownTicks(Infinity)        // keep rendering; we settle then freeze (no constant wobble)
   .d3VelocityDecay(0.62)          // firmer, less springy — nodes glide into place, not jello
   .d3AlphaDecay(0.05)             // settle quickly + damp reheats fast (solid feel)
+  .minZoom(0.4).maxZoom(9)        // clamp zoom so you can never scroll yourself lost
   .warmupTicks(0);
 
 Graph.d3Force("charge").strength(-200).distanceMax(560);
@@ -574,6 +587,7 @@ function applyData(){
   Graph.graphData({nodes:ns, links:ls});
   buildAdjacency(ns, ls);
   recomputeHighlight();
+  if(typeof updateStat==="function") updateStat();
 }
 
 /* dim level for a node given all active modes (0 = hidden-ish, 1 = full) */
@@ -708,6 +722,14 @@ Graph.linkDirectionalParticles(0);
 --------------------------------------------------------------------------- */
 let driftOn=false, settled=false, warm=0;
 const SETTLE_TICKS=150;
+const REVEAL_TICK=12;                // fade the canvas in once the first chaotic ticks are over
+
+let revealed=false;
+function reveal(){
+  if(revealed) return; revealed=true;
+  el.classList.add("ready");
+}
+setTimeout(reveal, 2800);            // safety: never leave the stage dark
 
 function freezeIntoDrift(doFit){
   nodes.forEach(n=>{ n._bx=n.x; n._by=n.y; });
@@ -715,6 +737,7 @@ function freezeIntoDrift(doFit){
   Graph.cooldownTicks(0);            // halt the d3 sim; gentle drift takes over
   if(doFit && !settled){
     settled=true;
+    reveal();
     Graph.zoomToFit(900,90);
     setStatus("Click an SDG to spotlight its evidence.");
   }
@@ -723,7 +746,8 @@ function freezeIntoDrift(doFit){
 // the sim runs with cooldownTicks=Infinity; we settle it ourselves after a warm period
 Graph.onEngineTick(()=>{
   driftOn=false;                     // d3 owns positions while ticking
-  if(++warm >= SETTLE_TICKS) freezeIntoDrift(true);
+  if(++warm === REVEAL_TICK) reveal();
+  if(warm >= SETTLE_TICKS) freezeIntoDrift(true);
 });
 Graph.onEngineStop(()=> freezeIntoDrift(true));
 
@@ -900,6 +924,17 @@ searchEl.addEventListener("input", ()=>{
 });
 searchEl.addEventListener("keydown",e=>{ if(e.key==="Escape"){ searchEl.value=""; searchMatches=null; searchEl.blur(); setStatus("Click an SDG to spotlight its evidence."); }});
 
+/* keyboard: "/" or ⌘K focuses search; Esc steps back out of any focus state */
+window.addEventListener("keydown",e=>{
+  const typing=/^(input|textarea|select)$/i.test((document.activeElement||{}).tagName||"");
+  if((e.key==="/" || ((e.metaKey||e.ctrlKey) && e.key.toLowerCase()==="k")) && !typing){
+    e.preventDefault(); searchEl.focus(); searchEl.select();
+  }
+  if(e.key==="Escape" && !typing && (selNode||isolateSet||searchMatches||panel.classList.contains("open"))){
+    clearFocus();
+  }
+});
+
 document.querySelectorAll("#filters button").forEach(b=>{
   b.onclick=()=>{
     const t=b.getAttribute("data-type");
@@ -932,9 +967,20 @@ function replay(){
    9. MISC
 --------------------------------------------------------------------------- */
 const statusEl=document.getElementById("status");
-let statusTimer=null;
 function setStatus(html){
+  if(statusEl.innerHTML===html) return;
   statusEl.innerHTML=html; statusEl.style.opacity="1";
+  if(statusEl.animate) statusEl.animate(
+    [{opacity:.35, transform:"translateX(-50%) translateY(3px)"},{opacity:1, transform:"translateX(-50%)"}],
+    {duration:240, easing:"cubic-bezier(.2,.8,.2,1)"});
+}
+
+/* quiet corpus stat next to the title — updates as the database grows */
+function updateStat(){
+  const c={goal:0, concept:0, document:0};
+  nodes.forEach(n=>{ c[n.type]++; });
+  const elStat=document.getElementById("kgStat");
+  if(elStat) elStat.textContent=`${c.document} sources · ${c.concept} concepts · ${c.goal} goals`;
 }
 
 function resize(){ Graph.width(window.innerWidth).height(window.innerHeight); }
@@ -980,7 +1026,7 @@ function addDocNode(doc, spotlight){
 window.SallyAddDoc = addDocNode;
 
 applyData();
-setStatus("Building the knowledge graph…");
+setStatus("Indexing sources into the neural database…");
 
 // pull in any previously uploaded docs (persistence across sessions)
 try{ if(window.Sally && Sally.store) Sally.store.docs().forEach(d=> addDocNode(d, false)); }catch(e){ console.warn(e); }

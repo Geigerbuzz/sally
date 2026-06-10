@@ -181,8 +181,8 @@ Sally.metrics = {
 Sally.NAV = [
   {id:"dashboard",  href:"index.html",                  icon:"ri-dashboard-line",     label:"Dashboard"},
   {id:"ask",        href:"sally-ask.html",              icon:"ri-chat-3-line",        label:"Ask Sally"},
-  {id:"documents",  href:"sally-documents.html",        icon:"ri-file-list-2-line",   label:"Documents"},
-  {id:"graph",      href:"sally-knowledge-graph.html",  icon:"ri-bubble-chart-line",  label:"Knowledge Graph"},
+  {id:"sources",    href:"sally-sources.html",          icon:"ri-stack-line",         label:"Sources"},
+  {id:"neural",     href:"sally-neural-database.html",  icon:"ri-brain-line",         label:"Neural Database"},
   {id:"compliance", href:"sally-sdg-compliance.html",   icon:"ri-shield-check-line",  label:"Compliance"},
 ];
 

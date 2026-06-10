@@ -109,7 +109,7 @@
   </div>
   <div class="dbody" id="dBody"></div>
   <div class="dfoot">
-    <a class="btn" href="sally-knowledge-graph.html"><i class="ri-bubble-chart-line"></i>Spotlight in graph</a>
+    <a class="btn" href="sally-neural-database.html"><i class="ri-brain-line"></i>Open in Neural Database</a>
     <a class="btn btn-accent" href="sally-ask.html"><i class="ri-chat-3-line"></i>Ask Sally</a>
   </div>
 </aside>
@@ -197,7 +197,7 @@ function open(n){
   body+=`<div class="blk"><h4>Related concepts <span class="c">· ${concepts.length}</span></h4>
     <div class="row" style="flex-wrap:wrap; gap:8px">${concepts.length?concepts.map(c=>`<span class="chip accent">${c}</span>`).join(""):'<span class="faint mono" style="font-size:11px">none</span>'}</div></div>`;
   document.getElementById("dBody").innerHTML=body;
-  document.getElementById("dBody").querySelectorAll(".evd").forEach(el=> el.onclick=()=>location.href="sally-documents.html#"+el.dataset.code);
+  document.getElementById("dBody").querySelectorAll(".evd").forEach(el=> el.onclick=()=>location.href="sally-sources.html#"+el.dataset.code);
   scrim.classList.add("open"); drawer.classList.add("open");
 }
 function close(){ scrim.classList.remove("open"); drawer.classList.remove("open"); }
