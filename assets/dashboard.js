@@ -29,7 +29,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   const m  = Sally.metrics;
   const sdg = n => Sally.sdg(n).color;
   const tg = Sally.topGoals(6);
-  const TEMPLATES = new Set(["kpi-card","line-chart","bar-chart","donut-chart","gauge","sdg-grid","gap-list","doc-list","ask-box","data-table"]);
+  const TEMPLATES = new Set(["kpi-card","line-chart","bar-chart","donut-chart","gauge","sdg-grid","gap-list","doc-list","ask-box","data-table","session-card"]);
 
   const DEFAULT = [
     { id:"w-score", template:"kpi-card", dimension:"1x1", title:"Overall SDG score", clickable:true, href:"sally-sdg-compliance.html",
@@ -75,6 +75,21 @@ document.addEventListener("DOMContentLoaded", ()=>{
   }
   let state = load();
   const save  = ()=>{ try{ Sally.store.saveDash(state); }catch(e){} };
+
+  /* sessions pinned from the Sessions page land here on next visit */
+  try{
+    const pend = Sally.store.get("pendingWidgets", []) || [];
+    if(pend.length){
+      const b = state.boards.find(x=>x.id===state.active) || state.boards[0];
+      pend.forEach(w=>{
+        if(w && w.template==="session-card" &&
+           !state.boards.some(bd=> (bd.widgets||[]).some(x=> x.template==="session-card" && x.session===w.session)))
+          b.widgets.push(w);
+      });
+      Sally.store.set("pendingWidgets", []);
+      Sally.store.saveDash(state);
+    }
+  }catch(e){}
   const board = ()=> state.boards.find(b=>b.id===state.active) || state.boards[0];
   let editMode = false;
 

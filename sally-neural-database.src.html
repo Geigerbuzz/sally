@@ -12,7 +12,7 @@
 
 /* ===== Design tokens (clean iOS-dark — shared with the rest of Sally) ===== */
 :root{
-  --ink:#0f0f11;          /* near-black field               */
+  --ink:#000000;          /* near-black field (Apple dark)  */
   --ink-2:#161618;
   --ink-3:rgba(255,255,255,0.05);
   --bg-surface:#1c1c1e;
@@ -52,23 +52,22 @@ body{
 }
 
 /* animated frosted backdrop — colour blobs → frost → grain (injected by Sally.mountFX) */
-.bg{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:radial-gradient(125% 120% at 50% -5%, #181426 0%, #0a0812 72%)}
-.bg-blobs{position:absolute; inset:-25%; filter:blur(60px) saturate(160%); animation:bgHue 80s linear infinite}
-.bg-blobs i{position:absolute; display:block; border-radius:50%; mix-blend-mode:screen; opacity:.6; will-change:transform}
-.bg-blobs i:nth-child(1){width:48vw;height:48vw; left:-8vw; top:-10vw; background:radial-gradient(circle at 50% 50%, #5b4bff, rgba(91,75,255,0) 60%); animation:bgD1 34s ease-in-out infinite}
-.bg-blobs i:nth-child(2){width:42vw;height:42vw; right:-8vw; top:-6vw; background:radial-gradient(circle at 50% 50%, #ff5c9a, rgba(255,92,154,0) 60%); animation:bgD2 41s ease-in-out infinite}
-.bg-blobs i:nth-child(3){width:46vw;height:46vw; right:2vw; bottom:-16vw; background:radial-gradient(circle at 50% 50%, #2fe3cf, rgba(47,227,207,0) 60%); animation:bgD3 38s ease-in-out infinite}
-.bg-blobs i:nth-child(4){width:40vw;height:40vw; left:4vw; bottom:-14vw; background:radial-gradient(circle at 50% 50%, #9b6bff, rgba(155,107,255,0) 60%); animation:bgD4 45s ease-in-out infinite}
-.bg-blobs i:nth-child(5){width:34vw;height:34vw; left:30vw; top:24vh; background:radial-gradient(circle at 50% 50%, #ffb24d, rgba(255,178,77,0) 62%); animation:bgD5 52s ease-in-out infinite}
-.bg-blobs i:nth-child(6){width:36vw;height:36vw; right:24vw; top:38vh; background:radial-gradient(circle at 50% 50%, #3aa0ff, rgba(58,160,255,0) 62%); animation:bgD6 47s ease-in-out infinite}
-@keyframes bgHue{from{filter:blur(60px) saturate(160%) hue-rotate(0deg)} to{filter:blur(60px) saturate(160%) hue-rotate(360deg)}}
+.bg{position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:radial-gradient(120% 110% at 50% -10%, #1c1c1e 0%, #000000 76%)}
+.bg-blobs{position:absolute; inset:-25%; filter:blur(70px)}
+.bg-blobs i{position:absolute; display:block; border-radius:50%; mix-blend-mode:screen; opacity:.16; will-change:transform}
+.bg-blobs i:nth-child(1){width:48vw;height:48vw; left:-8vw; top:-10vw; background:radial-gradient(circle at 50% 50%, #8e8e93, rgba(142,142,147,0) 60%); animation:bgD1 34s ease-in-out infinite}
+.bg-blobs i:nth-child(2){width:42vw;height:42vw; right:-8vw; top:-6vw; background:radial-gradient(circle at 50% 50%, #aeaeb2, rgba(174,174,178,0) 60%); animation:bgD2 41s ease-in-out infinite}
+.bg-blobs i:nth-child(3){width:46vw;height:46vw; right:2vw; bottom:-16vw; background:radial-gradient(circle at 50% 50%, #636366, rgba(99,99,102,0) 60%); animation:bgD3 38s ease-in-out infinite}
+.bg-blobs i:nth-child(4){width:40vw;height:40vw; left:4vw; bottom:-14vw; background:radial-gradient(circle at 50% 50%, #98989d, rgba(152,152,157,0) 60%); animation:bgD4 45s ease-in-out infinite}
+.bg-blobs i:nth-child(5){width:34vw;height:34vw; left:30vw; top:24vh; background:radial-gradient(circle at 50% 50%, #c7c7cc, rgba(199,199,204,0) 62%); animation:bgD5 52s ease-in-out infinite}
+.bg-blobs i:nth-child(6){width:36vw;height:36vw; right:24vw; top:38vh; background:radial-gradient(circle at 50% 50%, #7c7c80, rgba(124,124,128,0) 62%); animation:bgD6 47s ease-in-out infinite}
 @keyframes bgD1{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(7vw,6vh) scale(1.18)}}
 @keyframes bgD2{0%,100%{transform:translate(0,0) scale(1.05)}50%{transform:translate(-6vw,7vh) scale(.9)}}
 @keyframes bgD3{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-7vw,-6vh) scale(1.2)}}
 @keyframes bgD4{0%,100%{transform:translate(0,0) scale(1.08)}50%{transform:translate(6vw,-5vh) scale(.92)}}
 @keyframes bgD5{0%,100%{transform:translate(0,0) scale(1)}50%{transform:translate(-5vw,4vh) scale(1.22)}}
 @keyframes bgD6{0%,100%{transform:translate(0,0) scale(1.04)}50%{transform:translate(5vw,-6vh) scale(.88)}}
-.bg-frost{position:absolute; inset:0; background:linear-gradient(180deg, rgba(10,8,18,0.40), rgba(7,6,13,0.56)); backdrop-filter:blur(48px) saturate(125%); -webkit-backdrop-filter:blur(48px) saturate(125%)}
+.bg-frost{position:absolute; inset:0; background:linear-gradient(180deg, rgba(0,0,0,0.42), rgba(0,0,0,0.58)); backdrop-filter:blur(48px); -webkit-backdrop-filter:blur(48px)}
 .bg-grain{position:absolute; inset:-6%; opacity:.055; mix-blend-mode:overlay; animation:bgGrain 6s steps(7) infinite;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
 @keyframes bgGrain{0%{transform:translate(0,0)}14%{transform:translate(-4%,2%)}28%{transform:translate(3%,-3%)}42%{transform:translate(-2%,4%)}57%{transform:translate(4%,1%)}71%{transform:translate(-3%,-2%)}85%{transform:translate(2%,3%)}100%{transform:translate(0,0)}}
@@ -179,19 +178,19 @@ canvas{display:block}
 .search{position:relative; display:flex; align-items:center}
 .search svg{position:absolute; left:11px; width:13px; height:13px; stroke:var(--faint); pointer-events:none}
 #search{
-  font-family:var(--mono); font-size:12px; color:var(--text);
+  font-family:var(--body); font-size:13px; color:var(--text);
   background:var(--ink-3); border:1px solid var(--line); border-radius:11px;
   padding:9px 12px 9px 31px; width:228px; outline:none; transition:.18s;
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px);
 }
-#search::placeholder{color:var(--faint); letter-spacing:.04em}
+#search::placeholder{color:var(--faint)}
 #search:focus{border-color:var(--accent-line); background:rgba(255,255,255,0.07); width:264px; box-shadow:0 0 0 3px var(--accent-soft)}
 
 /* segmented type filters */
 .filters{display:flex; gap:2px; padding:3px; background:rgba(0,0,0,0.18); border:1px solid var(--line); border-radius:999px;
   backdrop-filter:blur(12px); -webkit-backdrop-filter:blur(12px)}
 .filters button{
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase;
+  font-family:var(--body); font-size:12px; font-weight:500;
   color:var(--faint); background:transparent; border:0; cursor:pointer;
   padding:7px 13px; border-radius:999px; transition:.16s; display:flex; align-items:center; gap:7px;
 }
@@ -205,7 +204,7 @@ canvas{display:block}
 
 /* generic chrome button */
 .btn{
-  font-family:var(--mono); font-size:10.5px; letter-spacing:.1em; text-transform:uppercase;
+  font-family:var(--body); font-size:12px; font-weight:500;
   color:var(--muted); background:var(--ink-3); border:1px solid var(--line);
   border-radius:11px; padding:9px 13px; cursor:pointer; transition:.16s;
   display:flex; align-items:center; gap:8px;
@@ -240,7 +239,7 @@ canvas{display:block}
 /* ===== Detail panel (slide-in, right) ===== */
 #panel{
   position:fixed; z-index:6; top:0; right:0; height:100%; width:380px; max-width:88vw;
-  background:linear-gradient(160deg, rgba(28,24,44,0.80), rgba(18,15,30,0.76)); border-left:1px solid var(--line);
+  background:linear-gradient(160deg, rgba(28,28,30,0.82), rgba(20,20,22,0.78)); border-left:1px solid var(--line);
   backdrop-filter:blur(30px) saturate(150%); -webkit-backdrop-filter:blur(30px) saturate(150%);
   transform:translateX(105%); transition:transform .42s cubic-bezier(.22,.61,.36,1);
   display:flex; flex-direction:column; box-shadow:-30px 0 80px rgba(0,0,0,.5);
@@ -907,7 +906,13 @@ searchEl.addEventListener("input", ()=>{
   const m=new Set();
   nodes.forEach(n=>{
     if(!visibleType[n.type]) return;
-    const hay=(n.name+" "+n.label+" "+(n.code||"")).toLowerCase();
+    // documents also match on their concepts, type and summary (so "solar",
+    // "audit" or "pay gap" land somewhere sensible during a live demo)
+    let hay=(n.name+" "+n.label+" "+(n.code||"")).toLowerCase();
+    if(n.type==="document" && window.Sally && Array.isArray(Sally.DOCS)){
+      const d=Sally.DOCS.find(x=>x.code===n.code);
+      if(d) hay+=" "+((d.concepts||[]).join(" ")+" "+(d.type||"")+" "+(d.summary||"")+" "+((d.cite&&d.cite.t)||"")).toLowerCase();
+    }
     if(hay.includes(q)) m.add(n.id);
   });
   searchMatches = m.size? m : new Set(["__none__"]);

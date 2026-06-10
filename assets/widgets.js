@@ -22,6 +22,7 @@
         case "gap-list":   return this.gapList(p);
         case "doc-list":   return this.docList(p);
         case "ask-box":    return this.askBox(p);
+        case "session-card":return this.sessionCard(p);
         case "data-table": return this.table(p);
         default:           return this.error("Unknown widget");
       }
@@ -204,6 +205,26 @@
       input.addEventListener("mousedown", e=>e.stopPropagation());
       el.querySelectorAll(".a-suggest .chip").forEach(c=> c.addEventListener("click", e=>{
         e.stopPropagation(); location.href="sally-ask.html?q="+encodeURIComponent(c.textContent.replace("?","")); }));
+      return el;
+    },
+
+    /* ---- pinned chat session (2x2) ---- */
+    sessionCard(p){
+      const el = this.base(p, ["clickable","sess-w"]);
+      const S = window.Sally && Sally.Sessions;
+      const s = S && S.get(p.session);
+      if(!s){
+        el.innerHTML = `${this.head({title:p.title||"Session"})}<div class="kpi-label" style="margin:auto">Session unavailable</div>`;
+        return el;
+      }
+      const last = S.lastMessage(s.id), count = S.messages(s.id).length;
+      const lm = last ? (Sally.TEAM[last.who]||{name:last.who}) : null;
+      el.innerHTML = `
+        <div class="w-head"><span class="w-title">Session</span><i class="ri-discuss-line w-corner"></i></div>
+        <div class="sw-title">${esc(s.title)}</div>
+        <div class="sw-last">${ last ? `<b>${esc(lm.name)}:</b> ${esc(S.plain(last.text))}` : "No messages yet." }</div>
+        <div class="sw-foot">${S.stackHtml(s.members,4)}<span class="sw-meta">${count} message${count===1?"":"s"}${last?" · "+esc(last.time):""}</span></div>`;
+      el.onclick = ()=> location.href = "sally-ask.html#"+encodeURIComponent(s.id);
       return el;
     },
 

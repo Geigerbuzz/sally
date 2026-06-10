@@ -6,13 +6,13 @@
 @import url('../vendor/remixicon.css');
 
 :root{
-  /* surfaces */
-  --bg-body:#0f0f11;
+  /* surfaces — Apple dark mode neutrals (systemGray ramp, no colour cast) */
+  --bg-body:#000000;
   --bg-surface:#1c1c1e;
-  --bg-surface-2:#242427;
-  --bg-elev:#2a2a2d;
-  --bg-base:radial-gradient(125% 120% at 50% -5%, #181426 0%, #0a0812 72%);  /* behind the animated colour */
-  --frost-tint:linear-gradient(180deg, rgba(8,6,14,0.66) 0%, rgba(10,8,18,0.40) 20%, rgba(7,6,13,0.54) 100%); /* darker top band keeps page titles readable */
+  --bg-surface-2:#2c2c2e;
+  --bg-elev:#3a3a3c;
+  --bg-base:radial-gradient(120% 110% at 50% -10%, #1c1c1e 0%, #000000 76%);  /* behind the soft light field */
+  --frost-tint:linear-gradient(180deg, rgba(0,0,0,0.60) 0%, rgba(0,0,0,0.38) 20%, rgba(0,0,0,0.52) 100%); /* darker top band keeps page titles readable */
 
   /* text */
   --text-primary:#ffffff;
@@ -33,11 +33,11 @@
   --purple:#bf5af2;
   --orange:#ff9f0a;
 
-  /* lines / glass */
+  /* lines / glass — neutral greys, no colour cast */
   --border:rgba(255,255,255,0.12);
   --border-2:rgba(255,255,255,0.20);
-  --glass-bg:rgba(28,25,42,0.40);        /* frosted panel — colour shows through, toned down */
-  --glass-bg-2:rgba(18,16,28,0.60);      /* heavier glass: dock / modals / drawer */
+  --glass-bg:rgba(28,28,30,0.52);        /* frosted panel — neutral, Apple-material feel */
+  --glass-bg-2:rgba(22,22,24,0.66);      /* heavier glass: dock / modals / drawer */
   --glass-blur:24px;
   --glass-border:rgba(255,255,255,0.15);
   --hairline:rgba(255,255,255,0.07);
@@ -66,12 +66,12 @@
 }
 
 [data-theme="light"]{
-  --bg-body:#eef0fb;
+  --bg-body:#f2f2f7;
   --bg-surface:#ffffff;
-  --bg-surface-2:#f0f0f3;
+  --bg-surface-2:#f2f2f7;
   --bg-elev:#ffffff;
-  --bg-base:radial-gradient(125% 120% at 50% -5%, #eef0fb 0%, #e7e6f3 72%);
-  --frost-tint:linear-gradient(180deg, rgba(248,247,252,0.70) 0%, rgba(247,246,252,0.46) 20%, rgba(242,240,250,0.60) 100%);
+  --bg-base:radial-gradient(120% 110% at 50% -10%, #ffffff 0%, #e5e5ea 76%);
+  --frost-tint:linear-gradient(180deg, rgba(248,248,250,0.72) 0%, rgba(246,246,248,0.48) 20%, rgba(242,242,247,0.62) 100%);
   --text-primary:#1d1d1f;
   --text-secondary:#6e6e73;
   --text-tertiary:#a1a1a6;
@@ -138,22 +138,27 @@ button{font-family:inherit}
    colour blobs (fuzzy) → frost (blurs + tones them down) → film grain.
    Injected once into <body> by Sally.mountFX(); content floats above it. */
 .bg{ position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none; background:var(--bg-base) }
-.bg-blobs{ position:absolute; inset:-25%; filter:blur(60px) saturate(160%); animation:bgHue 80s linear infinite }
-.bg-blobs i{ position:absolute; display:block; border-radius:50%; mix-blend-mode:screen; opacity:.6; will-change:transform }
-[data-theme="light"] .bg-blobs i{ mix-blend-mode:multiply; opacity:.34 }
+.bg-blobs{ position:absolute; inset:-25%; filter:blur(70px) }
+.bg-blobs i{ position:absolute; display:block; border-radius:50%; mix-blend-mode:screen; opacity:.16; will-change:transform }
+[data-theme="light"] .bg-blobs i{ mix-blend-mode:multiply; opacity:.30 }
 .bg-blobs i:nth-child(1){ width:48vw;height:48vw; left:-8vw; top:-10vw;
-  background:radial-gradient(circle at 50% 50%, #5b4bff, rgba(91,75,255,0) 60%); animation:bgD1 34s ease-in-out infinite }
+  background:radial-gradient(circle at 50% 50%, #8e8e93, rgba(142,142,147,0) 60%); animation:bgD1 34s ease-in-out infinite }
 .bg-blobs i:nth-child(2){ width:42vw;height:42vw; right:-8vw; top:-6vw;
-  background:radial-gradient(circle at 50% 50%, #ff5c9a, rgba(255,92,154,0) 60%); animation:bgD2 41s ease-in-out infinite }
+  background:radial-gradient(circle at 50% 50%, #aeaeb2, rgba(174,174,178,0) 60%); animation:bgD2 41s ease-in-out infinite }
 .bg-blobs i:nth-child(3){ width:46vw;height:46vw; right:2vw; bottom:-16vw;
-  background:radial-gradient(circle at 50% 50%, #2fe3cf, rgba(47,227,207,0) 60%); animation:bgD3 38s ease-in-out infinite }
+  background:radial-gradient(circle at 50% 50%, #636366, rgba(99,99,102,0) 60%); animation:bgD3 38s ease-in-out infinite }
 .bg-blobs i:nth-child(4){ width:40vw;height:40vw; left:4vw; bottom:-14vw;
-  background:radial-gradient(circle at 50% 50%, #9b6bff, rgba(155,107,255,0) 60%); animation:bgD4 45s ease-in-out infinite }
+  background:radial-gradient(circle at 50% 50%, #98989d, rgba(152,152,157,0) 60%); animation:bgD4 45s ease-in-out infinite }
 .bg-blobs i:nth-child(5){ width:34vw;height:34vw; left:30vw; top:24vh;
-  background:radial-gradient(circle at 50% 50%, #ffb24d, rgba(255,178,77,0) 62%); animation:bgD5 52s ease-in-out infinite }
+  background:radial-gradient(circle at 50% 50%, #c7c7cc, rgba(199,199,204,0) 62%); animation:bgD5 52s ease-in-out infinite }
 .bg-blobs i:nth-child(6){ width:36vw;height:36vw; right:24vw; top:38vh;
-  background:radial-gradient(circle at 50% 50%, #3aa0ff, rgba(58,160,255,0) 62%); animation:bgD6 47s ease-in-out infinite }
-@keyframes bgHue{ from{filter:blur(60px) saturate(160%) hue-rotate(0deg)} to{filter:blur(60px) saturate(160%) hue-rotate(360deg)} }
+  background:radial-gradient(circle at 50% 50%, #7c7c80, rgba(124,124,128,0) 62%); animation:bgD6 47s ease-in-out infinite }
+[data-theme="light"] .bg-blobs i:nth-child(1){ background:radial-gradient(circle at 50% 50%, #d1d1d6, rgba(209,209,214,0) 60%) }
+[data-theme="light"] .bg-blobs i:nth-child(2){ background:radial-gradient(circle at 50% 50%, #e5e5ea, rgba(229,229,234,0) 60%) }
+[data-theme="light"] .bg-blobs i:nth-child(3){ background:radial-gradient(circle at 50% 50%, #c7c7cc, rgba(199,199,204,0) 60%) }
+[data-theme="light"] .bg-blobs i:nth-child(4){ background:radial-gradient(circle at 50% 50%, #d8d8dc, rgba(216,216,220,0) 60%) }
+[data-theme="light"] .bg-blobs i:nth-child(5){ background:radial-gradient(circle at 50% 50%, #ebebf0, rgba(235,235,240,0) 62%) }
+[data-theme="light"] .bg-blobs i:nth-child(6){ background:radial-gradient(circle at 50% 50%, #cfcfd4, rgba(207,207,212,0) 62%) }
 @keyframes bgD1{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(7vw,6vh) scale(1.18)} }
 @keyframes bgD2{ 0%,100%{transform:translate(0,0) scale(1.05)} 50%{transform:translate(-6vw,7vh) scale(.9)} }
 @keyframes bgD3{ 0%,100%{transform:translate(0,0) scale(1)} 50%{transform:translate(-7vw,-6vh) scale(1.2)} }
@@ -332,6 +337,17 @@ body.dock-right .dock-item:hover::before{ transform:translateY(-50%) translateX(
 .status-pill.Developing,.status-pill.Emerging{ color:var(--warn); background:rgba(255,214,10,.12); border-color:rgba(255,214,10,.4) }
 .status-pill.Gap{ color:var(--bad); background:rgba(255,69,58,.12); border-color:rgba(255,69,58,.4) }
 
+/* ====================== people avatars (sessions / presence) ====================== */
+.pav{ width:26px;height:26px;border-radius:50%; flex:none; display:inline-flex; align-items:center; justify-content:center;
+  font-size:10px; font-weight:700; color:#fff; letter-spacing:.02em; user-select:none;
+  box-shadow:0 1px 4px rgba(0,0,0,.35), 0 0 0 1px rgba(255,255,255,.14) inset }
+.pav.ai{ background:linear-gradient(140deg,var(--accent-2),var(--accent)); font-size:13px }
+.pav.more{ background:var(--bg-elev); color:var(--text-secondary); font-size:9px; box-shadow:0 0 0 1px var(--border) inset }
+.pstack{ display:inline-flex; align-items:center }
+.pstack .pav{ border:2px solid var(--bg-surface); margin-left:-8px; transition:transform .18s var(--ease) }
+.pstack .pav:first-child{ margin-left:0 }
+.pstack .pav:hover{ transform:translateY(-2px); z-index:2 }
+
 /* citation badge (Ask Sally) */
 .cite{ display:inline-flex; align-items:center; justify-content:center; min-width:19px; height:19px; padding:0 5px;
   font-family:var(--mono); font-size:10px; font-weight:600; color:var(--accent);
@@ -443,6 +459,16 @@ body.dock-right .dock-item:hover::before{ transform:translateY(-50%) translateX(
 .askbox .a-send{ width:36px;height:36px; border-radius:10px; border:none; cursor:pointer; flex:none;
   background:linear-gradient(140deg,var(--accent-2),var(--accent)); color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px }
 .askbox .a-suggest{ display:flex; flex-wrap:wrap; gap:6px }
+
+/* pinned session widget */
+.widget.sess-w{ cursor:pointer }
+.sw-title{ font-size:18px; font-weight:600; letter-spacing:-0.015em; line-height:1.25; color:var(--text-primary);
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden }
+.sw-last{ flex:1; min-height:0; margin-top:10px; font-size:12.5px; line-height:1.5; color:var(--text-secondary);
+  display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden }
+.sw-last b{ color:var(--text-primary); font-weight:600 }
+.sw-foot{ display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid var(--hairline) }
+.sw-meta{ font-family:var(--mono); font-size:9.5px; letter-spacing:.05em; color:var(--text-tertiary); white-space:nowrap }
 
 /* table widget */
 .table-wrap{ flex:1; width:100%; overflow-y:auto; overflow-x:hidden }
