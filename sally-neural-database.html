@@ -113,12 +113,6 @@ canvas{display:block}
   border:1px solid var(--glass-border); border-radius:22px;
   box-shadow:0 12px 40px rgba(0,0,0,0.40), 0 1px 0 rgba(255,255,255,0.10) inset;
   transition:left .4s cubic-bezier(0.2,0.8,0.2,1) }
-.dock-brand{ display:flex; align-items:center; justify-content:center; width:40px;height:40px; margin-bottom:6px; flex:none }
-.dock-brand .dot{ width:26px;height:26px;border-radius:9px; position:relative;
-  background:linear-gradient(140deg,#5ab0ff 0%,var(--accent) 55%,#0a5fd6 100%);
-  box-shadow:0 0 0 1px rgba(255,255,255,.22) inset, 0 6px 16px -6px var(--accent) }
-.dock-brand .dot::after{ content:""; position:absolute; inset:5px; border-radius:5px;
-  background:radial-gradient(circle at 32% 26%, rgba(255,255,255,.95), rgba(255,255,255,0) 60%) }
 .dock-items{ display:flex; flex-direction:column; align-items:center; gap:4px; width:100% }
 .dock-item{ position:relative; display:flex; align-items:center; justify-content:center;
   width:44px;height:44px; border:none; background:transparent; cursor:pointer;
@@ -303,7 +297,6 @@ canvas{display:block}
   /* dock becomes the same bottom bar as every other page */
   .floating-dock{ top:auto; bottom:var(--dock-margin); left:50%; transform:translateX(-50%);
     flex-direction:row; width:auto; max-width:calc(100vw - 32px); padding:8px 12px; gap:4px; overflow-x:auto }
-  .floating-dock .dock-brand{ display:none }
   .floating-dock .dock-items{ flex-direction:row }
   .dock-divider{ width:1px; height:24px; margin:0 4px }
   .dock-item::before{ display:none }

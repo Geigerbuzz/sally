@@ -218,7 +218,6 @@ Sally.mountDock = function(active){
   if(!dock){ dock = document.createElement("nav"); dock.className="floating-dock"; document.body.appendChild(dock); }
   dock.setAttribute("aria-label","Primary");
   dock.innerHTML = `
-    <a class="dock-brand" href="index.html" title="Sally home" aria-label="Sally home"><span class="dot"></span></a>
     <div class="dock-items">
       ${Sally.NAV.map(n=>`<a class="dock-item ${n.id===active?'active':''}" href="${n.href}" data-label="${n.label}" aria-label="${n.label}"><i class="${n.icon}"></i></a>`).join("")}
     </div>
